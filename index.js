@@ -3,24 +3,52 @@
  */
 var sixWords = (function () {
 
-    var eventHandlers = {
-        onSessionStarted: function (sessionStartedRequest, session) {
-            // TODO
-            console.log("SESSION STARTED");
+    var requestHandlers = {
+        LaunchRequest: function (event, context) {
+            eventHandlers.onLaunch(event.request, event.session);
+        },
+        IntentRequest: function (event, context) {
+            eventHandlers.onIntent(event.request, event.session);
+        },
+        SessionEndedRequest: function (event, context) {
+            eventHandlers.onSessionEnded(event.request, event.session);
         }
     };
 
-    var requestHandlers = {
-        LaunchRequest: function (event, context) {
+    var eventHandlers = {
+        onSessionStarted: function (sessionStartedRequest, session) {
+            // TODO Maybe fire up the DB here?
+        },
+
+        onLaunch: function (launchRequest, session) {
+            // TODO Welcome message.
+        },
+
+        onIntent: function (intentRequest, session) {
+            // TODO handle the intent
+            var intent = intentRequest.intent,
+                intentName = intentRequest.intent.name,
+                intentHandler = intentHandlers[intentName];
+            if (intentHandler) {
+                console.log('SixWords _onIntent dispatch intent = ' + intentName);
+                intentHandler(intent, session);
+            } else {
+                throw 'SixWords ERROR Unsupported intent: ' + intentName;
+            }
+        },
+        onSessionEnded: function (sessionEndedRequest, session) {
+            // TODO maybe clean up any DB here?
+        }
+    };
+
+    var intentHandlers = {
+        ListenIntent: function (intent, session) {
             // TODO
-            console.log("LAUNCH REQUEST");
         }
     };
 
     return {
         execute: function(event, context) {
-            console.log("MADE IT INTO THE EXECUTE");
-
             // TODO: Do we want to check out AppID here?
 
             // If the session is new, initialize it.
@@ -29,8 +57,7 @@ var sixWords = (function () {
             }
 
             // Route the request to the right handler.
-            var requestHandler = requestHandlers[event.request.type];
-            requestHandler.call(this, event, context);
+            requestHandlers[event.request.type](event, context);
         }
     }
 }) ();
