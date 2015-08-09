@@ -9,5 +9,5 @@ exports.handler = function (event, context) {
     // Create an instance of the SixWords skill and execute it.
     // var memoryJane = new MemoryJane();
     // memoryJane.execute(event, context);
-    console.log("6WordsIndex _handler_  DONE");
+    console.log("6WordsIndex _handler  DONE");
 };
