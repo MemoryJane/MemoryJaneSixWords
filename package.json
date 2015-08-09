@@ -1,0 +1,19 @@
+{
+  "name": "memoryjanesixwords",
+  "version": "1.0.0",
+  "description": "An Alexa app for writing, sharing and listening to 6 Word Stories.",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/MemoryJane/MemoryJaneSixWords.git"
+  },
+  "author": "David Williams",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/MemoryJane/MemoryJaneSixWords/issues"
+  },
+  "homepage": "https://github.com/MemoryJane/MemoryJaneSixWords#readme"
+}
