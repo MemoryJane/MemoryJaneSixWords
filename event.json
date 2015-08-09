@@ -1,5 +1,27 @@
 {
-  "key": "value",
-  "key2": "value2",
-  "other_key": "other_value"
+  "version": "1.0",
+  "session": {
+    "new": true,
+    "sessionId": "SESSION_ID_LOCAL",
+    "application": {
+      "applicationId": "MemoryJaneSixWords"
+    }
+  },
+  "user": {
+    "userId": "Aaron_LOCAL"
+  },
+  "request": {
+    "type": "LaunchRequest",
+    "requestId": "MemoryJaneQuestionIntent",
+    "timestamp": "2015-05-13T12:34:56Z",
+    "intent": {
+      "name": "MemoryJaneQuestionIntent",
+      "slots": {
+        "Answer": {
+          "name": "Answer",
+          "value": "LOCAL_HACK"
+        }
+      }
+    }
+  }
 }
