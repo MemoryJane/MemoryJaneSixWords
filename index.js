@@ -61,7 +61,7 @@ var sixWords = (function () {
                     // Oops, they said too many or not enough words. Let's repeat what they said and tell
                     // them that they have to give us exactly 6 words.
                     var oopsResponse = "Oops. I heard you try to create the following story: "+userStory;
-                    oopsResponse += " . But our stories require exactly 6 words. "
+                    oopsResponse += " . But our stories require exactly 6 words. ";
                     oopsResponse += "Try again, say create followed by your six words.";
                     alexaAsk(oopsResponse, context);
                 } else {
