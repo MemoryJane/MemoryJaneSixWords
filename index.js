@@ -16,7 +16,7 @@ var sixWords = (function () {
             // Send a welcome message. Ask if the user wants to listen to a story.
             var welcomeMessage = "Welcome to Six Word Stories. ";
             welcomeMessage += "You can say listen to hear an awesome little six word story.";
-            alexaAsk(welcomeMessage, event.session, context);
+            alexaSpeak(welcomeMessage, event.session, context, false);
         },
 
         IntentRequest: function (event, context) {
@@ -42,7 +42,7 @@ var sixWords = (function () {
             // Get a story from data.
             data.getRandomStory(function (nextStory) {
                 // Read the story, Alexa.
-                alexaAsk(nextStory, session, context);
+                alexaSpeak(nextStory, session, context, false);
             });
         },
         CreateIntent: function (intent, session, context) {
@@ -51,7 +51,8 @@ var sixWords = (function () {
             // Let's create a story - did the user give us the 6 words we need?
             if (!intent.slots || !intent.slots.Story || !intent.slots.Story.value) {
                 // No Story. Let's tell them how to create.
-                alexaAsk("Great, let's make a story. Say create followed by your six words.", session, context);
+                var noStoryResponse = "Great, let's make a story. Say create followed by your six words.";
+                alexaSpeak(noStoryResponse, session, context, false);
             } else {
                 // Here's the story they said.
                 var userStory = intent.slots.Story.value;
@@ -63,7 +64,7 @@ var sixWords = (function () {
                     var oopsResponse = "Oops. I heard you try to create the following story: "+userStory;
                     oopsResponse += " . But our stories require exactly 6 words. ";
                     oopsResponse += "Try again, say create followed by your six words.";
-                    alexaAsk(oopsResponse, session, context);
+                    alexaSpeak(oopsResponse, session, context, false);
                 } else {
                     // They gave us 6 words, so now we save it to the session attributes.
                     if (!session.attributes) session.attributes = {};
@@ -72,7 +73,7 @@ var sixWords = (function () {
                     // And repeat it back to them to confirm that we heard them correctly.
                     var validWordsResponse = "Cool story! I just want to confirm I heard it right. Did you say ";
                     validWordsResponse += userStory+"?";
-                    alexaAsk(validWordsResponse, session, context);
+                    alexaSpeak(validWordsResponse, session, context, false);
                 }
             }
         },
@@ -81,7 +82,7 @@ var sixWords = (function () {
             if (!session.attributes.userStory || session.attributes.userStory.length == 0) {
                 var oopsResponse = "You can say listen to hear a story or create to write your own. ";
                 oopsResponse += "Which would you like?";
-                alexaAsk(oopsResponse, session, context);
+                alexaSpeak(oopsResponse, session, context, false);
             } else {
                 // We heard the story right, so store it in the DB
                 data.putNewStory(session.user.userId, session.attributes.userStory, function(putStoryError) {
@@ -91,9 +92,10 @@ var sixWords = (function () {
                         session.attributes.userStory = undefined;
 
                         // And ask them to write or listen to another one.
-                        var confirmationResponse = "Coolio! Your story is saved. I can't wait to tell it to other people. ";
-                        confirmationResponse += "What would you like to do next, create another story or listen to one?";
-                        alexaAsk(confirmationResponse, session, context);
+                        var confirmationResponse = "Coolio! Your story is saved. I can't wait to tell it. ";
+                        confirmationResponse += "What would you like to do next. "
+                        confirmationResponse += "Create another story or listen to one?";
+                        alexaSpeak(confirmationResponse, session, context, false);
                     }
                 });
             }
@@ -103,25 +105,25 @@ var sixWords = (function () {
             if (!session.attributes.userStory || session.attributes.userStory.length == 0) {
                 var oopsResponse = "You can say listen to hear a story or create to write your own. ";
                 oopsResponse += "Which would you like?";
-                alexaAsk(oopsResponse, session, context);
+                alexaSpeak(oopsResponse, session, context, false);
             } else {
                 // We didn't hear the story right, so ask them to tell it to us again.
                 session.attributes.userStory = undefined;
 
                 var confirmationResponse = "Oops, sorry about that. Let's try again. ";
                 confirmationResponse += "Say create followed by your six words.";
-                alexaAsk(confirmationResponse, session, context);
+                alexaSpeak(confirmationResponse, session, context, false);
             }
         },
         QuitIntent: function(intent, session, context) {
-            alexaTell("Goodbye");
+            alexaSpeak("Goodbye", session, context, true);
         }
     };
 
     /*
      * Helper function to build an Alexa response and send it to her via context.succeed.
      */
-    function alexaAsk(message, session, context) {
+    function alexaSpeak(message, session, context, endSession) {
         console.log("(*) Alexa Says: "+message);
 
         // Create the response for Alexa.
@@ -130,7 +132,7 @@ var sixWords = (function () {
                 outputSpeech: { type: 'PlainText', text: message },
                 // for now, just reprompt with the same message. TODO make this accept a unique reprompt?
                 reprompt: { type: 'PlainText', text: message },
-                shouldEndSession: false
+                shouldEndSession: endSession
             }
         };
 
@@ -138,26 +140,6 @@ var sixWords = (function () {
         alexaResponse.sessionAttributes = session.attributes;
 
         // Send it to Alexa.
-        context.succeed(alexaResponse);
-    }
-    function alexaTell(message, context) {
-        console.log("(*) Alexa Says: "+message);
-
-        // Create the response for Alexa.
-        var alexaResponse = { version: "1.0",
-            response: {
-                outputSpeech: { type: 'PlainText', text: message },
-                // for now, just reprompt with the same message. TODO make this accept a unique reprompt?
-                reprompt: { type: 'PlainText', text: message },
-                shouldEndSession: true
-            }
-        };
-
-        /*  TODO do I need to store the session attributes here to get them back later?
-         if (options.session && options.session.attributes) {
-         returnResult.sessionAttributes = options.session.attributes;
-         } */
-
         context.succeed(alexaResponse);
     }
 
