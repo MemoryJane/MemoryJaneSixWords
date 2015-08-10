@@ -10,7 +10,7 @@ var sixWords = (function () {
         // TODO Maybe fire up the DB here?
     }
 
-    // Request handlers just pass off the
+    // Request handlers - launch, intent and ended.
     var requestHandlers = {
         LaunchRequest: function (event, context) {
             // Send a welcome message. Ask if the user wants to listen to a story.
@@ -18,7 +18,9 @@ var sixWords = (function () {
             welcomeMessage += "You can say listen to hear a sweet little six word story.";
             alexaAsk(welcomeMessage, context);
         },
+
         IntentRequest: function (event, context) {
+            // See if we have an intent to handle the intent we got. If so, call it.
             var intent = event.request.intent,
                 intentName = event.request.intent.name,
                 intentHandler = intentHandlers[intentName];
@@ -29,6 +31,7 @@ var sixWords = (function () {
                 throw 'SixWords ERROR Unsupported intent: ' + intentName;
             }
         },
+
         SessionEndedRequest: function (event, context) {
             // TODO maybe clean up any DB here?
         }
@@ -60,8 +63,7 @@ var sixWords = (function () {
         /*  TODO do I need to store the session attributes here to get them back later?
         if (options.session && options.session.attributes) {
             returnResult.sessionAttributes = options.session.attributes;
-        }
-        */
+        } */
 
         context.succeed(alexaResponse);
     }
@@ -91,9 +93,9 @@ var sixWords = (function () {
  * @param context
  */
 exports.handler = function (event, context) {
-    console.log("6WordsIndex _handler  START");
+    console.log("SixWordsIndex _handler  START");
 
     // Create an instance of the SixWords skill and execute it.
     sixWords.execute(event, context);
-    console.log("6WordsIndex _handler  DONE");
+    console.log("SixWordsIndex _handler  DONE");
 };
