@@ -43,7 +43,10 @@ var sixWords = (function () {
 
     var intentHandlers = {
         ListenIntent: function (intent, session) {
-            // TODO
+            var data = require("./data.js");
+            data.getRandomStory(function(story){
+                console.log(story)
+            });
         }
     };
 
