@@ -10,15 +10,18 @@
       "userId": "Aaron_LOCAL"
     },
     "attributes": {
-      "userStory": "banana banana banana banana banana banana"
+      "userStory": "banana banana banana banana banana banana",
+      "Timestamp": "0",
+      "DateStamp": "0",
+      "givenRating": "0"
     }
   },
   "request": {
     "type": "IntentRequest",
-    "requestId": "CreateIntent",
+    "requestId": "LikeIntent",
     "timestamp": "2015-05-13T12:34:56Z",
     "intent": {
-      "name": "CreateIntent",
+      "name": "LikeIntent",
       "slots": {
         "Story": {
           "name": "Story",

@@ -117,6 +117,12 @@ var sixWords = (function () {
         },
         QuitIntent: function(intent, session, context) {
             alexaSpeak("Goodbye", session, context, true);
+        },
+        LikeIntent: function(intent, session, context) {
+            data.modifyRating(session.attributes.TimeStamp, session.attributes.DateStamp, session.attributes.givenRating, function(callback)
+            {
+                alexaSpeak("Glad you liked it! Would you like to listen to more stories or create one?", session, context, false);
+            });
         }
     };
 

@@ -10,7 +10,7 @@ var data = (function () {
     function getDynamoDB () {
         var DB;
 
-        if (false) {
+        if (true) {
             DB = new AWS.DynamoDB({endpoint: new AWS.Endpoint('http://localhost:8000')});
             DB.config.update({accessKeyId: "myKeyId", secretAccessKey: "secretKey", region: "us-east-1"});
             console.log("USING LOCAL");
@@ -51,6 +51,7 @@ var data = (function () {
                     var storyCount = tableStoryData.Count;
                     var randomStoryIndex = (Math.floor(Math.random() * storyCount));
                     var story = tableStoryData.Items[randomStoryIndex].Story.S;
+                    //var author = tableStoryData.Items[randomStoryIndex].Story.S;
                     console.log("Data _gettingStory_ " + story);
                     callback(story);
                 }
@@ -68,7 +69,8 @@ var data = (function () {
                     DateStamp: { "N": getDateToday().toString() },
                     TimeStamp: { "N": getTimeNow().toString() },
                     Story: {"S": story},
-                    Author: {"S": author}
+                    Author: {"S": author},
+                    Rating: {"N": "0"}
                 }
             };
 
@@ -76,6 +78,30 @@ var data = (function () {
                 if (resultErr) errorCallback(resultErr);
                 else errorCallback();
             });
+        },
+
+        modifyRating: function (date, time, rating, callback) {
+            dynamodb.updateItem({
+                "TableName" : "MemoryJaneSixWordStories",
+                "Key" : {
+                    "DateStamp" : {
+                        "S" : date
+                    },
+                    "TimeStamp" : {
+                        "S" : time
+                    }
+                },
+                "UpdateExpression" : "SET #attrName =:attrValue",
+                "ExpressionAttributeNames" : {
+                    "#attrName" : "Rating"
+                },
+                "ExpressionAttributeValues" : {
+                    ":attrValue" : {
+                        "N" : rating + 1
+                    }
+                }
+            });
+            callback();
         },
 
         /**
