@@ -19,16 +19,19 @@ var data = (function () {
         return DB;
     }
 
-    function getTime (callback){
+    function getDateToday (){
         var rightNow = new Date();
-        var dateToday = Number(rightNow.getUTCFullYear())
+        return dateToday = Number(rightNow.getUTCFullYear())
             +((rightNow.getUTCMonth()+1)*10000)
             +((rightNow.getUTCDate()+1)*1000000);
-        var timeNow = Number(rightNow.getUTCMilliseconds())
+    }
+
+    function getTimeNow (){
+        var rightNow = new Date();
+        return timeNow = Number(rightNow.getUTCMilliseconds())
             +(rightNow.getUTCSeconds()*1000)
             +(rightNow.getUTCMinutes()*100000)
             +(rightNow.getUTCHours()*10000000);
-        callback(dateToday, timeNow);
     }
 
     return {
@@ -57,20 +60,18 @@ var data = (function () {
          * @param errorCallback
          */
         putNewStory: function (author, story, errorCallback){
-            getTime(function(dateToday, timeNow) {
-                var newStoryParams = { TableName: 'MemoryJaneSixWordStories',
-                    Item: {
-                        DateStamp: { "N": dateToday.toString() },
-                        TimeStamp: { "N": timeNow.toString() },
-                        Story: {"S": story},
-                        Author: {"S": author}
-                    }
-                };
+            var newStoryParams = { TableName: 'MemoryJaneSixWordStories',
+                Item: {
+                    DateStamp: { "N": getDateToday().toString() },
+                    TimeStamp: { "N": getTimeNow().toString() },
+                    Story: {"S": story},
+                    Author: {"S": author}
+                }
+            };
 
-                dynamodb.putItem(newStoryParams, function (resultErr, data) {
-                    if (resultErr) errorCallback(resultErr);
-                    else errorCallback();
-                });
+            dynamodb.putItem(newStoryParams, function (resultErr, data) {
+                if (resultErr) errorCallback(resultErr);
+                else errorCallback();
             });
         },
 
@@ -82,21 +83,19 @@ var data = (function () {
          * @param errorCallback
          */
         putUserActivity: function (author, story, userAction, errorCallback){
-            getTime(function(dateToday, timeNow) {
-                var activityParams = { TableName: 'MemoryJaneSixWordStoriesActivity',
-                    Item: {
-                        DateStamp: { "N": dateToday.toString() },
-                        TimeStamp: { "N": timeNow.toString() },
-                        Story: {"S": story},
-                        Author: {"S": author},
-                        UserAction: {"S": userAction}
-                    }
-                };
+            var activityParams = { TableName: 'MemoryJaneSixWordStoriesActivity',
+                Item: {
+                    DateStamp: { "N": getDateToday().toString() },
+                    TimeStamp: { "N": getTimeNow().toString() },
+                    Story: {"S": story},
+                    Author: {"S": author},
+                    UserAction: {"S": userAction}
+                }
+            };
 
-                dynamodb.putItem(activityParams, function (resultErr, data) {
-                    if (resultErr) errorCallback(resultErr);
-                    else errorCallback();
-                });
+            dynamodb.putItem(activityParams, function (resultErr, data) {
+                if (resultErr) errorCallback(resultErr);
+                else errorCallback();
             });
         }
     }
