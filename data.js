@@ -9,13 +9,15 @@ var data = (function () {
      */
     function getDynamoDB () {
         var DB;
-        var local = false;
-        if (local) {
+
+        if (false) {
             DB = new AWS.DynamoDB({endpoint: new AWS.Endpoint('http://localhost:8000')});
             DB.config.update({accessKeyId: "myKeyId", secretAccessKey: "secretKey", region: "us-east-1"});
+            console.log("USING LOCAL");
         } else {
             // Otherwise try to connect to the remote DB using the config file.
             DB = new AWS.DynamoDB();
+            console.log("USING AWS");
         }
         return DB;
     }

@@ -16,7 +16,7 @@ var sixWords = (function () {
             // Send a welcome message. Ask if the user wants to listen to a story.
             var welcomeMessage = "Welcome to Six Word Stories. ";
             welcomeMessage += "You can say listen to hear an awesome little six word story.";
-            alexaAsk(welcomeMessage, context);
+            alexaAsk(welcomeMessage, event.session, context);
         },
 
         IntentRequest: function (event, context) {
@@ -42,7 +42,7 @@ var sixWords = (function () {
             // Get a story from data.
             data.getRandomStory(function (nextStory) {
                 // Read the story, Alexa.
-                alexaAsk(nextStory, context);
+                alexaAsk(nextStory, session, context);
             });
         },
         CreateIntent: function (intent, session, context) {
@@ -51,7 +51,7 @@ var sixWords = (function () {
             // Let's create a story - did the user give us the 6 words we need?
             if (!intent.slots || !intent.slots.Story || !intent.slots.Story.value) {
                 // No Story. Let's tell them how to create.
-                alexaAsk("Great, let's make a story. Say create followed by your six words.", context);
+                alexaAsk("Great, let's make a story. Say create followed by your six words.", session, context);
             } else {
                 // Here's the story they said.
                 var userStory = intent.slots.Story.value;
@@ -63,24 +63,25 @@ var sixWords = (function () {
                     var oopsResponse = "Oops. I heard you try to create the following story: "+userStory;
                     oopsResponse += " . But our stories require exactly 6 words. ";
                     oopsResponse += "Try again, say create followed by your six words.";
-                    alexaAsk(oopsResponse, context);
+                    alexaAsk(oopsResponse, session, context);
                 } else {
                     // They gave us 6 words, so now we save it to the session attributes.
+                    if (!session.attributes) session.attributes = {};
                     session.attributes.userStory = userStory;
 
                     // And repeat it back to them to confirm that we heard them correctly.
                     var validWordsResponse = "Cool story! I just want to confirm I heard it right. Did you say ";
                     validWordsResponse += userStory+"?";
-                    alexaAsk(validWordsResponse, context);
+                    alexaAsk(validWordsResponse, session, context);
                 }
             }
         },
-        yesIntent: function(intent, session, context) {
+        YesIntent: function(intent, session, context) {
             // If there isn't a story in the attributes, then this intent is not valid, give them some instructions.
-            if (!session.attributes.userStory || !session.attributes.userStory.length == 0) {
+            if (!session.attributes.userStory || session.attributes.userStory.length == 0) {
                 var oopsResponse = "You can say listen to hear a story or create to write your own. ";
                 oopsResponse += "Which would you like?";
-                alexaAsk(oopsResponse, context);
+                alexaAsk(oopsResponse, session, context);
             } else {
                 // We heard the story right, so store it in the DB
                 data.putNewStory(session.user.userId, session.attributes.userStory, function(putStoryError) {
@@ -92,24 +93,24 @@ var sixWords = (function () {
                         // And ask them to write or listen to another one.
                         var confirmationResponse = "Coolio! Your story is saved. I can't wait to tell it to other people. ";
                         confirmationResponse += "What would you like to do next, create another story or listen to one?";
-                        alexaAsk(confirmationResponse);
+                        alexaAsk(confirmationResponse, session, context);
                     }
                 });
             }
         },
-        noIntent: function(intent, session, context) {
+        NoIntent: function(intent, session, context) {
             // If there isn't a story in the attributes, then this intent is not valid, give them some instructions.
-            if (!session.attributes.userStory || !session.attributes.userStory.length == 0) {
+            if (!session.attributes.userStory || session.attributes.userStory.length == 0) {
                 var oopsResponse = "You can say listen to hear a story or create to write your own. ";
                 oopsResponse += "Which would you like?";
-                alexaAsk(oopsResponse, context);
+                alexaAsk(oopsResponse, session, context);
             } else {
                 // We didn't hear the story right, so ask them to tell it to us again.
                 session.attributes.userStory = undefined;
 
                 var confirmationResponse = "Oops, sorry about that. Let's try again. ";
                 confirmationResponse += "Say create followed by your six words.";
-                alexaAsk(confirmationResponse);
+                alexaAsk(confirmationResponse, session, context);
             }
         },
         QuitIntent: function(intent, session, context) {
@@ -117,7 +118,10 @@ var sixWords = (function () {
         }
     };
 
-    function alexaAsk(message, context) {
+    /*
+     * Helper function to build an Alexa response and send it to her via context.succeed.
+     */
+    function alexaAsk(message, session, context) {
         console.log("(*) Alexa Says: "+message);
 
         // Create the response for Alexa.
@@ -130,11 +134,10 @@ var sixWords = (function () {
             }
         };
 
-        /*  TODO do I need to store the session attributes here to get them back later?
-        if (options.session && options.session.attributes) {
-            returnResult.sessionAttributes = options.session.attributes;
-        } */
+        // Add the session attributes to the response.
+        alexaResponse.sessionAttributes = session.attributes;
 
+        // Send it to Alexa.
         context.succeed(alexaResponse);
     }
     function alexaTell(message, context) {
@@ -157,7 +160,6 @@ var sixWords = (function () {
 
         context.succeed(alexaResponse);
     }
-
 
     return {
         /*
