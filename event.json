@@ -10,22 +10,19 @@
       "userId": "Aaron_LOCAL"
     },
     "attributes": {
-      "userStory": "banana banana banana banana banana banana",
-      "Timestamp": "0",
-      "DateStamp": "0",
-      "givenRating": "0"
+      "userStory": "banana banana banana banana banana banana period"
     }
   },
   "request": {
     "type": "IntentRequest",
-    "requestId": "LikeIntent",
+    "requestId": "CreateIntent",
     "timestamp": "2015-05-13T12:34:56Z",
     "intent": {
-      "name": "LikeIntent",
+      "name": "CreateIntent",
       "slots": {
         "Story": {
           "name": "Story",
-          "value": "this is my story monkey boy"
+          "value": "this is my story monkey boy period"
         }
       }
     }
