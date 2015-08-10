@@ -19,6 +19,18 @@ var data = (function () {
         return DB;
     }
 
+    function getTime (callback){
+        var rightNow = new Date();
+        var dateToday = Number(rightNow.getUTCFullYear())
+            +((rightNow.getUTCMonth()+1)*10000)
+            +((rightNow.getUTCDate()+1)*1000000);
+        var timeNow = Number(rightNow.getUTCMilliseconds())
+            +(rightNow.getUTCSeconds()*1000)
+            +(rightNow.getUTCMinutes()*100000)
+            +(rightNow.getUTCHours()*10000000);
+        callback(dateToday, timeNow);
+    }
+
     return {
          /**
          * Gets a random story from the database and returns it
@@ -38,28 +50,53 @@ var data = (function () {
                 }
             });
         },
-
+        /**
+         * Puts a user created story into the database
+         * @param author
+         * @param story
+         * @param errorCallback
+         */
         putNewStory: function (author, story, errorCallback){
-            var rightNow = new Date();
-            var dateToday = Number(rightNow.getUTCFullYear())
-                +((rightNow.getUTCMonth()+1)*10000)
-                +((rightNow.getUTCDate()+1)*1000000);
-            var timeNow = Number(rightNow.getUTCMilliseconds())
-                +(rightNow.getUTCSeconds()*1000)
-                +(rightNow.getUTCMinutes()*100000)
-                +(rightNow.getUTCHours()*10000000);
-            var resultParams = { TableName: 'MemoryJaneSixWordStories',
-                Item: {
-                    DateStamp: { "N": dateToday.toString() },
-                    TimeStamp: { "N": timeNow.toString() },
-                    Story: {"S": story},
-                    Author: {"S": author}
-                }
-            };
+            getTime(function(dateToday, timeNow) {
+                var newStoryParams = { TableName: 'MemoryJaneSixWordStories',
+                    Item: {
+                        DateStamp: { "N": dateToday.toString() },
+                        TimeStamp: { "N": timeNow.toString() },
+                        Story: {"S": story},
+                        Author: {"S": author}
+                    }
+                };
 
-            dynamodb.putItem(resultParams, function (resultErr, data) {
-                if (resultErr) errorCallback(resultErr);
-                else errorCallback();
+                dynamodb.putItem(newStoryParams, function (resultErr, data) {
+                    if (resultErr) errorCallback(resultErr);
+                    else errorCallback();
+                });
+            });
+        },
+
+        /**
+         * Puts logs of what users do into the database
+         * @param author
+         * @param story
+         * @param userAction
+         * @param errorCallback
+         */
+        putUserActivity: function (author, story, userAction, errorCallback){
+            getTime(function(dateToday, timeNow) {
+                var activityParams = { TableName: 'MemoryJaneSixWordStoriesActivity',
+                    Item: {
+                        DateStamp: { "N": dateToday.toString() },
+                        TimeStamp: { "N": timeNow.toString() },
+                        Story: {"S": story},
+                        Author: {"S": author},
+                        UserAction: {"S": userAction}
+                    }
+                };
+
+                dynamodb.putItem(activityParams, function (resultErr, data) {
+                    if (resultErr) errorCallback(resultErr);
+                    else errorCallback();
+                });
             });
         }
     }
