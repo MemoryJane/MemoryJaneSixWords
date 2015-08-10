@@ -5,21 +5,24 @@
     "sessionId": "SESSION_ID_LOCAL",
     "application": {
       "applicationId": "MemoryJaneSixWords"
+    },
+    "user": {
+      "userId": "Aaron_LOCAL"
+    },
+    "attributes": {
+      "userStory": "banana banana banana banana banana banana"
     }
-  },
-  "user": {
-    "userId": "Aaron_LOCAL"
   },
   "request": {
     "type": "IntentRequest",
-    "requestId": "ListenIntent",
+    "requestId": "CreateIntent",
     "timestamp": "2015-05-13T12:34:56Z",
     "intent": {
-      "name": "ListenIntent",
+      "name": "CreateIntent",
       "slots": {
-        "Answer": {
-          "name": "Answer",
-          "value": "LOCAL_HACK"
+        "Story": {
+          "name": "Story",
+          "value": "this is my story monkey boy"
         }
       }
     }
