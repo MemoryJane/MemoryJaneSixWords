@@ -11,7 +11,7 @@
     "userId": "Aaron_LOCAL"
   },
   "request": {
-    "type": "LaunchRequest",
+    "type": "IntentRequest",
     "requestId": "ListenIntent",
     "timestamp": "2015-05-13T12:34:56Z",
     "intent": {
