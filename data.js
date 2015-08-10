@@ -1,14 +1,15 @@
 var data = (function () {
     var AWS = require("aws-sdk");
-    var dynamodb = getDynamoDB(false);
+    var dynamodb = getDynamoDB();
 
     /**
      * Get the database object, either from AWS if it is there, or locally if it is not.
      * This is a private function.
      * @returns {AWS.DynamoDB}
      */
-    function getDynamoDB (local) {
+    function getDynamoDB () {
         var DB;
+        var local = false;
         if (local) {
             DB = new AWS.DynamoDB({endpoint: new AWS.Endpoint('http://localhost:8000')});
             DB.config.update({accessKeyId: "myKeyId", secretAccessKey: "secretKey", region: "us-east-1"});

@@ -111,6 +111,9 @@ var sixWords = (function () {
                 confirmationResponse += "Say create followed by your six words.";
                 alexaAsk(confirmationResponse);
             }
+        },
+        QuitIntent: function(intent, session, context) {
+            alexaTell("Goodbye");
         }
     };
 
@@ -131,6 +134,26 @@ var sixWords = (function () {
         if (options.session && options.session.attributes) {
             returnResult.sessionAttributes = options.session.attributes;
         } */
+
+        context.succeed(alexaResponse);
+    }
+    function alexaTell(message, context) {
+        console.log("(*) Alexa Says: "+message);
+
+        // Create the response for Alexa.
+        var alexaResponse = { version: "1.0",
+            response: {
+                outputSpeech: { type: 'PlainText', text: message },
+                // for now, just reprompt with the same message. TODO make this accept a unique reprompt?
+                reprompt: { type: 'PlainText', text: message },
+                shouldEndSession: true
+            }
+        };
+
+        /*  TODO do I need to store the session attributes here to get them back later?
+         if (options.session && options.session.attributes) {
+         returnResult.sessionAttributes = options.session.attributes;
+         } */
 
         context.succeed(alexaResponse);
     }
