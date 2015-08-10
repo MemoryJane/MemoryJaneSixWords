@@ -40,10 +40,35 @@ var sixWords = (function () {
     var intentHandlers = {
         ListenIntent: function (intent, session, context) {
             // Get a story from data.
-            data.getRandomStory(function (nextStory) {
-                // Read the story, Alexa.
-                alexaSpeak(nextStory, session, context, false);
+            data.getRandomStory(function (nextStory, storyDate, storyTime) {
+                // Save the storyDate and storyTime to make sure we know which story was read.
+                session.attributes.storyDate = storyDate;
+                session.attributes.storyTime = storyTime;
+
+                // Read the story, Alexa, ask if they want to up vote it.
+                var ratingAnnouncement = ". . . If you liked that story, you can say, up vote.";
+                ratingAnnouncement += "Or you can say listen to hear another story.";
+                alexaSpeak(nextStory + ratingAnnouncement, session, context, false);
             });
+        },
+        UpVoteIntent: function (intent, session, context) {
+            // If there is a story saved in the session, then we're ready to upvote.
+            if (!session.attributes) session.attributes = {};
+            if (session.attributes.storyDate && session.attributes.storyTime) {
+                data.incrementStoryRating(session.attributes.storyDate, session.attributes.storyTime, function (error) {
+                    if (error) { console.log("SixWords _upVoteIntent  ERROR "+error);
+                    } else {
+                        var upVoteResponse = "Great, I've given the story an up vote. ";
+                        upVoteResponse += "Say listen to hear another story.";
+                        alexaSpeak(upVoteResponse, session, context, false);
+                    }
+                });
+            } else {
+                // If there's no story saved in the session, then just invite them to listen.
+                var oopsResponse = "You can say listen to hear a story or create to write your own. ";
+                oopsResponse += "Which would you like?";
+                alexaSpeak(oopsResponse, session, context, false);
+            }
         },
         CreateIntent: function (intent, session, context) {
             // Let's create a story - did the user give us the 6 words we need?

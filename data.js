@@ -42,7 +42,7 @@ var data = (function () {
          * Gets a random story from the database and returns it
          * @param callback
          */
-        getRandomStory: function (callback){
+        getRandomStory: function (callback, storyDate, storyTime){
             // Get all of the data from the MemoryJaneSixWordStories Table
             var tableParams = { TableName: "MemoryJaneSixWordStories"};
             dynamodb.scan(tableParams, function (tableStoryErr, tableStoryData) {
@@ -53,7 +53,7 @@ var data = (function () {
                     var story = tableStoryData.Items[randomStoryIndex].Story.S;
                     //var author = tableStoryData.Items[randomStoryIndex].Story.S;
                     console.log("Data _gettingStory_ " + story);
-                    callback(story);
+                    callback(story, tableStoryData.Items[randomStoryIndex].Date, tableStoryData.Items[randomStoryIndex].Time);
                 }
             });
         },
@@ -80,28 +80,21 @@ var data = (function () {
             });
         },
 
-        modifyRating: function (date, time, rating, callback) {
-            dynamodb.updateItem({
-                "TableName" : "MemoryJaneSixWordStories",
-                "Key" : {
-                    "DateStamp" : {
-                        "S" : date
-                    },
-                    "TimeStamp" : {
-                        "S" : time
-                    }
-                },
-                "UpdateExpression" : "SET #attrName =:attrValue",
-                "ExpressionAttributeNames" : {
-                    "#attrName" : "Rating"
-                },
-                "ExpressionAttributeValues" : {
-                    ":attrValue" : {
-                        "N" : rating + 1
-                    }
-                }
+        /*
+         * Increment the story rating for a specific story.
+         */
+        incrementStoryRating: function (date, time, callback) {
+            // Get the current rating.
+            var updateItemParams = {
+                TableName : "MemoryJaneSixWordStories",
+                Key : { DateStamp : { "N" : date }, TimeStamp : { "N" : time } },
+                UpdateExpression : "ADD #rating :increment",
+                ExpressionAttributeNames : { "#rating" : "Rating" },
+                ExpressionAttributeValues : { ":increment" : {"N":"1"} }
+            };
+            dynamodb.updateItem(updateItemParams, function(updateError, updateData) {
+                callback(updateError);
             });
-            callback();
         },
 
         /**
