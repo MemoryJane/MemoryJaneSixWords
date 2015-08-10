@@ -2,61 +2,83 @@
  * Module for the Six Words functionality, based on the Alexa spec.
  */
 var sixWords = (function () {
+    // This data object is our connection to the database.
+    var data = require("./data.js");
 
+    // When a new session starts, initialize anything that needs initializing.
+    function onSessionStarted(sessionStartedRequest, session, context) {
+        // TODO Maybe fire up the DB here?
+    }
+
+    // Request handlers - launch, intent and ended.
     var requestHandlers = {
         LaunchRequest: function (event, context) {
-            eventHandlers.onLaunch(event.request, event.session);
+            // Send a welcome message. Ask if the user wants to listen to a story.
+            var welcomeMessage = "Welcome to Six Word Stories. ";
+            welcomeMessage += "You can say listen to hear a sweet little six word story.";
+            alexaAsk(welcomeMessage, context);
         },
+
         IntentRequest: function (event, context) {
-            eventHandlers.onIntent(event.request, event.session);
-        },
-        SessionEndedRequest: function (event, context) {
-            eventHandlers.onSessionEnded(event.request, event.session);
-        }
-    };
-
-    var eventHandlers = {
-        onSessionStarted: function (sessionStartedRequest, session) {
-            // TODO Maybe fire up the DB here?
-        },
-
-        onLaunch: function (launchRequest, session) {
-            // TODO Welcome message.
-        },
-
-        onIntent: function (intentRequest, session) {
-            // TODO handle the intent
-            var intent = intentRequest.intent,
-                intentName = intentRequest.intent.name,
+            // See if we have an intent to handle the intent we got. If so, call it.
+            var intent = event.request.intent,
+                intentName = event.request.intent.name,
                 intentHandler = intentHandlers[intentName];
             if (intentHandler) {
                 console.log('SixWords _onIntent dispatch intent = ' + intentName);
-                intentHandler(intent, session);
+                intentHandler(intent, event.session, context);
             } else {
                 throw 'SixWords ERROR Unsupported intent: ' + intentName;
             }
         },
-        onSessionEnded: function (sessionEndedRequest, session) {
+
+        SessionEndedRequest: function (event, context) {
             // TODO maybe clean up any DB here?
         }
     };
 
     var intentHandlers = {
-        ListenIntent: function (intent, session) {
-            var data = require("./data.js");
-            data.getRandomStory(function(story){
-                console.log(story)
+        ListenIntent: function (intent, session, context) {
+            // Get a story from data.
+            data.getRandomStory(function (nextStory) {
+                // Read the story, Alexa.
+                alexaAsk(nextStory, context);
             });
         }
     };
 
+    function alexaAsk(message, context) {
+        console.log("(*) Alexa Says: "+message);
+
+        // Create the response for Alexa.
+        var alexaResponse = { version: "1.0",
+            response: {
+                outputSpeech: { type: 'PlainText', text: message },
+                // for now, just reprompt with the same message. TODO make this accept a unique reprompt
+                reprompt: { type: 'PlainText', text: message },
+                shouldEndSession: false
+            }
+        };
+
+        /*  TODO do I need to store the session attributes here to get them back later?
+        if (options.session && options.session.attributes) {
+            returnResult.sessionAttributes = options.session.attributes;
+        } */
+
+        context.succeed(alexaResponse);
+    }
+
+
     return {
+        /*
+         * The only public function of the module. Called by the handler, it executes the Alexa Skill.
+         */
         execute: function(event, context) {
-            // TODO: Do we want to check out AppID here?
+            // TODO: Do we want to check the AppID here?
 
             // If the session is new, initialize it.
             if (event.session.new) {
-                eventHandlers.onSessionStarted(event.request, event.session);
+                onSessionStarted(event.request, event.session, context);
             }
 
             // Route the request to the right handler.
@@ -71,9 +93,9 @@ var sixWords = (function () {
  * @param context
  */
 exports.handler = function (event, context) {
-    console.log("6WordsIndex _handler  START");
+    console.log("SixWordsIndex _handler  START");
 
     // Create an instance of the SixWords skill and execute it.
     sixWords.execute(event, context);
-    console.log("6WordsIndex _handler  DONE");
+    console.log("SixWordsIndex _handler  DONE");
 };
