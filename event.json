@@ -10,7 +10,7 @@
       "userId": "Aaron_LOCAL"
     },
     "attributes": {
-      "userStory": "banana banana banana banana banana banana"
+      "userStory": "banana banana banana banana banana banana period"
     }
   },
   "request": {
@@ -22,7 +22,7 @@
       "slots": {
         "Story": {
           "name": "Story",
-          "value": "this is my story monkey boy"
+          "value": "this is my story monkey boy period"
         }
       }
     }

@@ -46,17 +46,26 @@ var sixWords = (function () {
             });
         },
         CreateIntent: function (intent, session, context) {
-            console.log(intent.slots);
-
             // Let's create a story - did the user give us the 6 words we need?
             if (!intent.slots || !intent.slots.Story || !intent.slots.Story.value) {
                 // No Story. Let's tell them how to create.
                 var noStoryResponse = "Great, let's make a story. Say create followed by your six words.";
                 alexaSpeak(noStoryResponse, session, context, false);
             } else {
-                // Here's the story they said.
+                // Turn "period" and "comma" into punctuation, and count the length.
                 var userStory = intent.slots.Story.value;
-                var userStoryWordCount = userStory.split(" ").length;
+                var userStoryArray = userStory.split(" ");
+                var userStoryWordCount = userStoryArray.length;
+
+                // Let's see if the user included any punctuation.
+                var userStoryArrayWithoutPunctuation = punctuationFixer(userStoryArray.splice(0));
+                var userStoryArrayWithoutPunctuationCount = userStoryArrayWithoutPunctuation.length;
+                if (userStoryWordCount != userStoryArrayWithoutPunctuationCount &&
+                    userStoryArrayWithoutPunctuationCount == 6) {
+                    // They did use punctuation, so use the punctuation corrected values.
+                    userStoryWordCount = userStoryArrayWithoutPunctuationCount;
+                    userStory = userStoryArrayWithoutPunctuation.join(" ");
+                }
 
                 if (userStoryWordCount > 6 || userStoryWordCount < 6) {
                     // Oops, they said too many or not enough words. Let's repeat what they said and tell
@@ -72,7 +81,7 @@ var sixWords = (function () {
 
                     // And repeat it back to them to confirm that we heard them correctly.
                     var validWordsResponse = "Cool story! I just want to confirm I heard it right. Did you say ";
-                    validWordsResponse += userStory+"?";
+                    validWordsResponse += userStory+" ?";
                     alexaSpeak(validWordsResponse, session, context, false);
                 }
             }
@@ -141,6 +150,29 @@ var sixWords = (function () {
 
         // Send it to Alexa.
         context.succeed(alexaResponse);
+    }
+
+    /*
+     * The fullStory parameter is an array of the words of a sentence. This function replaces all instances of
+     * "period" and "comma" with the punctuation mark on the previous word. It discards any punctuation words
+     * at the beginning of the sentence. It returns a new array with the updated words.
+     */
+    function punctuationFixer (storyArray) {
+        for (i = 0; i < storyArray.length; i++) {
+            if (storyArray[i].toLowerCase() == "period" || storyArray[i].toLowerCase() == "comma") {
+                if (i != 0) {
+                    // This is not the first item, so append the punctuation to the previous word.
+                    var punctuation = ".";
+                    if (storyArray[i].toLowerCase() == "comma") punctuation = ",";
+                    storyArray[i-1] = storyArray[i-1].concat(punctuation);
+                }
+
+                // Remove the punctuation from the array. and stay on the current word.
+                storyArray.splice(i, 1);
+                i--;
+            }
+        }
+        return storyArray;
     }
 
     return {
