@@ -96,6 +96,47 @@ var data = (function () {
             });
         },
 
+        addStoryReaction: function (reaction, storyId, userId, callback) {
+            var newReactionParams = { TableName: 'MemoryJaneSixWordReactions',
+                Item: {
+                    TimeStamp: { "N": getTimeStamp().toString() },
+                    StoryId: {"N": storyId},
+                    UserId: {"S": userId},
+                    Reaction: {"S": reaction}
+                }
+            };
+
+            dynamodb.putItem(newReactionParams, function (reactionErr, reactionData) {
+                if (reactionErr) errorCallback(reactionErr);
+                else callback();
+            });
+        },
+
+        /**
+         * Gets a random story's rating from the database and returns it
+         * @param storyId
+         * @param callback
+         */
+        getStoryRating: function (storyId, callback){
+            // Get all of the data for the specific story you are looking for
+            var storyRatingParams = { TableName: 'MemoryJaneSixWordStories',
+                Item: {
+                    TimeStamp: { "N": storyId }
+                }
+            };
+            dynamodb.getItem(storyRatingParams, function (tableStoryErr, tableStoryData) {
+                if (tableStoryErr) console.log("Data _tableScan_  ERROR " + tableStoryErr);
+                else {
+                    var rating = tableStoryData.Rating;
+                    callback(rating);
+                }
+            });
+        },
+
+        getLatestStoryReactions: function (storyId, callback){
+
+        },
+
         /**
          * Puts logs of what users do into the database
          * @param author
