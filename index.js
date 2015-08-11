@@ -39,6 +39,7 @@ var sixWords = (function () {
 
     var intentHandlers = {
         ListenIntent: function (intent, session, context) {
+            session.attributes.storyState = "ListenIntent";
             // Get a story from data.
             data.getRandomStory(function (nextStory, storyDate, storyTime) {
                 // Save the storyDate and storyTime to make sure we know which story was read.
@@ -53,6 +54,7 @@ var sixWords = (function () {
             });
         },
         UpVoteIntent: function (intent, session, context) {
+            session.attributes.storyState = "UpVoteIntent";
             // If there is a story saved in the session, then we're ready to upvote.
             console.log(session.attributes);
             if (!session.attributes) session.attributes = {};
@@ -77,6 +79,7 @@ var sixWords = (function () {
             }
         },
         CreateIntent: function (intent, session, context) {
+            session.attributes.storyState = "CreateIntent";
             // Let's create a story - did the user give us the 6 words we need?
             if (!intent.slots || !intent.slots.Story || !intent.slots.Story.value) {
                 // No Story. Let's tell them how to create.
@@ -118,6 +121,7 @@ var sixWords = (function () {
             }
         },
         YesIntent: function(intent, session, context) {
+            session.attributes.storyState = "YesIntent";
             // If there isn't a story in the attributes, then this intent is not valid, give them some instructions.
             if (!session.attributes.userStory || session.attributes.userStory.length == 0) {
                 var oopsResponse = "You can say listen to hear a story or create to write your own. ";
@@ -133,7 +137,7 @@ var sixWords = (function () {
 
                         // And ask them to write or listen to another one.
                         var confirmationResponse = "Coolio! Your story is saved. I can't wait to tell it. ";
-                        confirmationResponse += "What would you like to do next. "
+                        confirmationResponse += "What would you like to do next. ";
                         confirmationResponse += "Create another story or listen to one?";
                         alexaSpeak(confirmationResponse, session, context, false);
                     }
@@ -141,6 +145,7 @@ var sixWords = (function () {
             }
         },
         NoIntent: function(intent, session, context) {
+            session.attributes.storyState = "NoIntent";
             // If there isn't a story in the attributes, then this intent is not valid, give them some instructions.
             if (!session.attributes.userStory || session.attributes.userStory.length == 0) {
                 var oopsResponse = "You can say listen to hear a story or create to write your own. ";
@@ -157,6 +162,30 @@ var sixWords = (function () {
         },
         QuitIntent: function(intent, session, context) {
             alexaSpeak("Goodbye", session, context, true);
+        },
+        HelpIntent: function(intent, session, context) {
+            if (session.attributes.storyState == undefined)
+            {
+                //If the user just entered the session, give them a generic help message
+                alexaSpeak("Welcome to Six Word Stories! You can say listen to hear an awesome" +
+                    " six word story or create to write your own. Which would you like?", session, context, false);
+            }
+            else if (session.attributes.storyState == "CreateIntent")
+            {
+                //If the user entered from CreateIntent, give them a help message relating to that intent
+                alexaSpeak("To create a story, say create followed by any six words six words", session, context, false);
+            }
+            else if (session.attributes.storyState == "ListenIntent")
+            {
+                //If the user entered from ListenIntent, give them a help message relating to that intent
+                alexaSpeak("To listen to a story say listen", session, context, false);
+            } else
+            {
+                //If the user entered from YesIntent, NoIntent, or UpVoteIntent, give
+                // them a help message relating to that intent
+                alexaSpeak("To create a story, say create followed by any six words six words." +
+                    " To listen to a story say listen", session, context, false);
+            }
         }
     };
 
