@@ -18,9 +18,9 @@ var sixWords = (function () {
     var requestHandlers = {
         LaunchRequest: function (event, context) {
             // Send a welcome message. Ask if the user wants to listen to a story.
-            var welcomeMessage = "Welcome to Six Word Stories. ";
-            welcomeMessage += "You can say listen to hear an awesome little six word story.";
-            alexaSpeak(welcomeMessage, event.session, context, false);
+            var welcomeMessageReaction = "Welcome to Six Word Stories. ";
+            var welcomeMessageInstruct = "You can say listen to hear an awesome little six word story.";
+            alexaSpeak(welcomeMessageReaction, welcomeMessageInstruct, event.session, context, false);
         },
 
         IntentRequest: function (event, context) {
@@ -50,9 +50,9 @@ var sixWords = (function () {
                 session.attributes.storyState = "JustHeardAStory";
 
                 // Read the story, Alexa, ask if they want to up vote it.
-                var ratingAnnouncement = " . If you liked that story, you can say, up vote. ";
-                ratingAnnouncement += "Or you can say listen to hear another story.";
-                alexaSpeak(nextStory + ratingAnnouncement, session, context, false);
+                var ratingInstruction = "If you liked that story, you can say, up vote. ";
+                ratingInstruction += "Or you can say listen to hear another story.";
+                alexaSpeak(nextStory+" . ", ratingInstruction, session, context, false);
             });
         },
         UpVoteIntent: function (intent, session, context) {
@@ -61,7 +61,7 @@ var sixWords = (function () {
                 session.attributes.storyState = undefined;
                 var oopsResponse = "You can say listen to hear a story or create to write your own. ";
                 oopsResponse += "Which would you like to do?";
-                alexaSpeak(oopsResponse, session, context, false);
+                alexaSpeak("", oopsResponse, session, context, false);
             } else {
                 // If we just heard a story, then we're ready to up vote.
                 // First off, did we get a reaction in addition to the up vote?
@@ -74,10 +74,11 @@ var sixWords = (function () {
                     } else {
                         // Dang, we got a reaction, but it's too too long or empty.
                         // Don't add the up vote, just tell the user to try again.
-                        var retryUpVoteResponse = "Oops, reactions can only be one word, and I heard your ";
-                        retryUpVoteResponse += "reaction as "+reaction+" . Try saying, up vote with reaction, then ";
+                        var retryUpVoteReaction = "Oops.";
+                        var retryUpVoteResponse = "Reactions can only be one word, and I heard your ";
+                        retryUpVoteResponse += "reaction as "+reaction+" . Try saying up vote with reaction then ";
                         retryUpVoteResponse += "your single word reaction.";
-                        alexaSpeak(retryUpVoteResponse, session, context, false);
+                        alexaSpeak(retryUpVoteReaction, retryUpVoteResponse, session, context, false);
                         return;
                     }
                 }
@@ -88,7 +89,8 @@ var sixWords = (function () {
                     } else {
                         // Up vote done, now clear out the state and prepare the response.
                         session.attributes.storyState = undefined;
-                        var upVoteResponse = "Great, I've given the story an up vote"+reactionResponse+". ";
+                        var upVoteReaction = "Great.";
+                        var upVoteResponse = "I've given the story an up vote"+reactionResponse+". ";
                         upVoteResponse += "You can say listen to hear another story.";
 
                         // If there was a reaction, add it to our DB.
@@ -99,12 +101,12 @@ var sixWords = (function () {
                                 if (addReactionError) {
                                     console.log("SixWords _upVoteIntent addReaction  ERROR " + addReactionError);
                                 } else {
-                                    alexaSpeak(upVoteResponse, session, context, false);
+                                    alexaSpeak(upVoteReaction, upVoteResponse, session, context, false);
                                 }
                             });
                         } else {
                             // No reaction? No problem, just send the up vote response.
-                            alexaSpeak(upVoteResponse, session, context, false);
+                            alexaSpeak(upVoteReaction, upVoteResponse, session, context, false);
                         }
                     }
                 });
@@ -116,19 +118,21 @@ var sixWords = (function () {
                 session.attributes.storyState = undefined;
                 var oopsResponse = "You can say listen to hear a story or create to write your own. ";
                 oopsResponse += "Which would you like to do?";
-                alexaSpeak(oopsResponse, session, context, false);
+                alexaSpeak("", oopsResponse, session, context, false);
             } else {
                 // The user wants to hear the reactions for the most recent story.
                 data.getLatestStoryReactions(session.attributes.timeStamp, function(reactions, getReactionsError){
                     if (getReactionsError) {
                         console.log("SixWords _hearReactionsIntent getReactions  ERROR " + error);
                     } else {
+                        var reactionsReaction = "";
                         var reactionsResponse = "Reactions to this story are. ";
 
                         // Were there any reactions for this story?
                         if (!reactions) {
                             // Nope, let the user down easy, and tell them how to be the first to react.
-                            reactionsResponse = "Sorry, there aren't any reactions for this story yet. ";
+                            reactionsReaction = "Sorry";
+                            reactionsResponse = "There aren't any reactions for this story yet. ";
                             reactionsResponse += "But you can be first, just say up vote with reaction, ";
                             reactionsResponse += "and then say your one word reaction.";
                         } else {
@@ -137,7 +141,7 @@ var sixWords = (function () {
                                 reactionsResponse += reactions[i]+". ";
                             }
                         }
-                        alexaSpeak(reactionsResponse, session, context, false);
+                        alexaSpeak(reactionsReaction, reactionsResponse, session, context, false);
                     }
                 });
             }
@@ -147,8 +151,9 @@ var sixWords = (function () {
             if (!intent.slots || !intent.slots.Story || !intent.slots.Story.value) {
                 // No Story. Let's tell them how to create.
                 session.attributes.storyState = "ThinkingAboutCreating";
-                var noStoryResponse = "Great, let's make a story. Say create followed by any six words.";
-                alexaSpeak(noStoryResponse, session, context, false);
+                var noStoryReaction = "Great, let's make a story. ";
+                var noStoryResponse = "Say create followed by any six words.";
+                alexaSpeak(noStoryReaction, noStoryResponse, session, context, false);
             } else {
                 // Get what the user said.
                 var userStory = intent.slots.Story.value;
@@ -170,19 +175,21 @@ var sixWords = (function () {
                     // them that they have to give us exactly 6 words.
                     session.attributes.storyState = "ThinkingAboutCreating";
 
-                    var oopsResponse = "Oops. I heard you try to create the following story: "+userStory;
+                    var oopsReaction = "Oops.";
+                    var oopsResponse = "I heard you try to create the following story: "+userStory;
                     oopsResponse += " . But our stories require exactly 6 words. ";
                     oopsResponse += "Try again. Say create followed by your six words.";
-                    alexaSpeak(oopsResponse, session, context, false);
+                    alexaSpeak(oopsReaction, oopsResponse, session, context, false);
                 } else {
                     // They gave us 6 words, so now we save it to the session attributes.
                     session.attributes.userStory = userStory;
                     session.attributes.storyState = "JustCreatedAStory";
 
                     // And repeat it back to them to confirm that we heard them correctly.
-                    var validWordsResponse = "Cool story! I just want to confirm I heard it right. Did you say ";
+                    var validWordsReaction = "Cool story! ";
+                    var validWordsResponse = "I just want to confirm I heard it right. Did you say ";
                     validWordsResponse += userStory+" ?";
-                    alexaSpeak(validWordsResponse, session, context, false);
+                    alexaSpeak(validWordsReaction, validWordsResponse, session, context, false);
                 }
             }
         },
@@ -192,7 +199,7 @@ var sixWords = (function () {
                 session.attributes.storyState = undefined;
                 var oopsResponse = "You can say listen to hear a story or create to write your own. ";
                 oopsResponse += "Which would you like?";
-                alexaSpeak(oopsResponse, session, context, false);
+                alexaSpeak("", oopsResponse, session, context, false);
             } else {
                 // We heard the story right, so store it in the DB
                 data.putNewStory(session.user.userId, session.attributes.userStory, function(putStoryError) {
@@ -202,10 +209,11 @@ var sixWords = (function () {
                         session.attributes.storyState = "ThinkingAboutCreating";
 
                         // And ask them to write or listen to another one.
-                        var confirmationResponse = "Coolio! Your story is saved. I can't wait to tell it. ";
-                        confirmationResponse += "What would you like to do next. ";
-                        confirmationResponse += "Create another story or listen to one?";
-                        alexaSpeak(confirmationResponse, session, context, false);
+                        var confirmationReaction = "Coolio! ";
+                        confirmationReaction += "Your story is saved. I can't wait for other people to hear it. ";
+                        var confirmationResponse = "What would you like to do next, ";
+                        confirmationResponse += "create another story or listen to one?";
+                        alexaSpeak(confirmationReaction, confirmationResponse, session, context, false);
                     }
                 });
             }
@@ -216,52 +224,56 @@ var sixWords = (function () {
                 session.attributes.storyState = undefined;
                 var oopsResponse = "You can say listen to hear a story or create to write your own. ";
                 oopsResponse += "Which would you like?";
-                alexaSpeak(oopsResponse, session, context, false);
+                alexaSpeak("", oopsResponse, session, context, false);
             } else {
                 // We didn't hear the story right, so ask them to tell it to us again.
                 session.attributes.storyState = "ThinkingAboutCreating";
 
-                var confirmationResponse = "Oops, sorry about that. Let's try again. ";
-                confirmationResponse += "Say create followed by any six words.";
-                alexaSpeak(confirmationResponse, session, context, false);
+                var confirmationReaction = "Oops, sorry about that. Let's try again. ";
+                var confirmationResponse = "Say create followed by any six words.";
+                alexaSpeak(confirmationReaction, confirmationResponse, session, context, false);
             }
         },
         HelpIntent: function(intent, session, context) {
             if (session.attributes.storyState == "ThinkingAboutCreating") {
                 //If the user is thinking about creating a story, tell them exactly how to
-                alexaSpeak("To create a story, say create followed by any six words.", session, context, false);
+                alexaSpeak("", "To create a story, say create followed by any six words.", session, context, false);
                 //TODO expert punctuation
             } else if (session.attributes.storyState == "JustHeardAStory") {
                 //If the user just heard a story, give them a help message helping them to listen to another
-                alexaSpeak("To listen to another story say listen.", session, context, false);
+                alexaSpeak("", "To listen to another story say listen.", session, context, false);
             } else if (session.attributes.storyState == "JustCreatedAStory") {
                 //If the user just created a story, give them a help message asking them to confirm their story
-                alexaSpeak("You just created the story " + session.attributes.userStory +
+                alexaSpeak("", "You just created the story " + session.attributes.userStory +
                     " . Did I hear you correctly?", session, context, false);
             } else {
                 //If the user just entered the session, give them a generic help message
-                var welcomeMessage = "Welcome to Six Word Stories! You can say listen to hear an awesome" +
+                var welcomeReaction = "Welcome to Six Word Stories! ";
+                var welcomeMessage = "You can say listen to hear an awesome" +
                     " six word story or say create to write your own story. What would you like to do?";
-                alexaSpeak(welcomeMessage, session, context, false);
+                alexaSpeak(welcomeReaction, welcomeMessage, session, context, false);
             }
         },
         QuitIntent: function(intent, session, context) {
-            alexaSpeak("Goodbye", session, context, true);
+            alexaSpeak("", "Goodbye", session, context, true);
         }
     };
 
     /*
      * Helper function to build an Alexa response and send it to her via context.succeed.
      */
-    function alexaSpeak(message, session, context, endSession) {
-        console.log("(*) Alexa Says: "+message);
+    function alexaSpeak(reactionMessage, instructionMessage, session, context, endSession) {
+        console.log("(*) Alexa Says: "+reactionMessage+instructionMessage);
+
+        // Create a reprompt, which is just the message plus a short preamble.
+        var repromptReaction = "Sorry, I didn't understand. ";
 
         // Create the response for Alexa.
         var alexaResponse = { version: "1.0",
             response: {
-                outputSpeech: { type: 'PlainText', text: message },
+                outputSpeech: { type: 'PlainText', text: reactionMessage + instructionMessage },
                 // for now, just reprompt with the same message. TODO make this accept a unique reprompt?
-                reprompt: { type: 'PlainText', text: message },
+                reprompt: { outputSpeech: { type: 'PlainText', text: repromptReaction+ instructionMessage} },
                 shouldEndSession: endSession
             }
         };
