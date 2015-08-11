@@ -64,9 +64,7 @@ var sixWords = (function () {
                 alexaSpeak(oopsResponse, session, context, false);
             } else {
                 // If we just heard a story, then we're ready to up vote.
-                data.incrementStoryRating(session.attributes.timeStamp, function (error) {
-                    if (error) { console.log("SixWords _upVoteIntent  ERROR "+error);
-                data.incrementStoryRating(session.attributes.storyDate, session.attributes.storyTime, function (incrementError) {
+                data.incrementStoryRating(session.attributes.timeStamp, function (incrementError) {
                     if (incrementError) { console.log("SixWords _upVoteIntent incrementRating  ERROR "+incrementError);
                     } else {
                         // Up vote done, now clear out the state, prepare the response.
@@ -91,6 +89,7 @@ var sixWords = (function () {
                 });
             }
         },
+
         CreateIntent: function (intent, session, context) {
             // Let's create a story - did the user give us the 6 words we need?
             if (!intent.slots || !intent.slots.Story || !intent.slots.Story.value) {
