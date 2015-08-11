@@ -164,27 +164,21 @@ var sixWords = (function () {
             alexaSpeak("Goodbye", session, context, true);
         },
         HelpIntent: function(intent, session, context) {
-            if (session.attributes.storyState == undefined)
-            {
+            if (!session.attributes.storyState) {
                 //If the user just entered the session, give them a generic help message
                 alexaSpeak("Welcome to Six Word Stories! You can say listen to hear an awesome" +
                     " six word story or create to write your own. Which would you like?", session, context, false);
-            }
-            else if (session.attributes.storyState == "CreateIntent")
-            {
-                //If the user entered from CreateIntent, give them a help message relating to that intent
+            } else if (session.attributes.storyState == "JustHeardAStory") {
+                //If the user just heard a story, give them a help message helping them to listen to another
+                alexaSpeak("To listen to another story, say listen", session, context, false);
+            } else if (session.attributes.storyState == "JustCreatedAStory") {
+                //If the user just created a story, give them a help message asking them to confirm their story
+                alexaSpeak("You just created the story " + session.attributes.userStory +
+                    ". Did I hear you correctly?", session, context, false);
+            } else {
+                //If the user is thinking about creating a story, tell them exactly how to
                 alexaSpeak("To create a story, say create followed by any six words six words", session, context, false);
-            }
-            else if (session.attributes.storyState == "ListenIntent")
-            {
-                //If the user entered from ListenIntent, give them a help message relating to that intent
-                alexaSpeak("To listen to a story say listen", session, context, false);
-            } else
-            {
-                //If the user entered from YesIntent, NoIntent, or UpVoteIntent, give
-                // them a help message relating to that intent
-                alexaSpeak("To create a story, say create followed by any six words six words." +
-                    " To listen to a story say listen", session, context, false);
+                //TODO expert punctuation
             }
         }
     };
