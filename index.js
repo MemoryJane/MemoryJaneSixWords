@@ -44,10 +44,9 @@ var sixWords = (function () {
     var intentHandlers = {
         ListenIntent: function (intent, session, context) {
             // Get a story from data.
-            data.getRandomStory(function (nextStory, storyDate, storyTime) {
+            data.getRandomStory(function (nextStory, timeStamp) {
                 // Save the storyDate and storyTime to make sure we know which story was read.
-                session.attributes.storyDate = storyDate;
-                session.attributes.storyTime = storyTime;
+                session.attributes.timeStamp = timeStamp;
                 session.attributes.storyState = "JustHeardAStory";
 
                 // Read the story, Alexa, ask if they want to up vote it.
@@ -65,6 +64,8 @@ var sixWords = (function () {
                 alexaSpeak(oopsResponse, session, context, false);
             } else {
                 // If we just heard a story, then we're ready to up vote.
+                data.incrementStoryRating(session.attributes.timeStamp, function (error) {
+                    if (error) { console.log("SixWords _upVoteIntent  ERROR "+error);
                 data.incrementStoryRating(session.attributes.storyDate, session.attributes.storyTime, function (incrementError) {
                     if (incrementError) { console.log("SixWords _upVoteIntent incrementRating  ERROR "+incrementError);
                     } else {
@@ -90,7 +91,6 @@ var sixWords = (function () {
                 });
             }
         },
-
         CreateIntent: function (intent, session, context) {
             // Let's create a story - did the user give us the 6 words we need?
             if (!intent.slots || !intent.slots.Story || !intent.slots.Story.value) {
