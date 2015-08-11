@@ -66,12 +66,16 @@ var sixWords = (function () {
                         session.attributes.storyDate = undefined;
                         session.attributes.storyTime = undefined;
 
+                        session.attributes.storyState = undefined;
+
                         var upVoteResponse = "Great, I've given the story an up vote. ";
                         upVoteResponse += "Say listen to hear another story.";
                         alexaSpeak(upVoteResponse, session, context, false);
                     }
                 });
             } else {
+                session.attributes.storyState = undefined;
+
                 // If there's no story saved in the session, then just invite them to listen.
                 var oopsResponse = "You can say listen to hear a story or create to write your own. ";
                 oopsResponse += "Which would you like?";
@@ -125,6 +129,7 @@ var sixWords = (function () {
         YesIntent: function(intent, session, context) {
             // If there isn't a story in the attributes, then this intent is not valid, give them some instructions.
             if (!session.attributes.userStory || session.attributes.userStory.length == 0) {
+                session.attributes.storyState = undefined;
                 var oopsResponse = "You can say listen to hear a story or create to write your own. ";
                 oopsResponse += "Which would you like?";
                 alexaSpeak(oopsResponse, session, context, false);
@@ -149,6 +154,7 @@ var sixWords = (function () {
         NoIntent: function(intent, session, context) {
             // If there isn't a story in the attributes, then this intent is not valid, give them some instructions.
             if (!session.attributes.userStory || session.attributes.userStory.length == 0) {
+                session.attributes.storyState = undefined;
                 var oopsResponse = "You can say listen to hear a story or create to write your own. ";
                 oopsResponse += "Which would you like?";
                 alexaSpeak(oopsResponse, session, context, false);
@@ -176,7 +182,7 @@ var sixWords = (function () {
             } else if (session.attributes.storyState == "JustCreatedAStory") {
                 //If the user just created a story, give them a help message asking them to confirm their story
                 alexaSpeak("You just created the story " + session.attributes.userStory +
-                    ". Did I hear you correctly?", session, context, false);
+                    " . Did I hear you correctly?", session, context, false);
             } else {
                 //If the user just entered the session, give them a generic help message
                 alexaSpeak("Welcome to Six Word Stories! You can say listen to hear an awesome" +
