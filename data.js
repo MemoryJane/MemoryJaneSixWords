@@ -10,7 +10,7 @@ var data = (function () {
     function getDynamoDB () {
         var DB;
 
-        if (true) {
+        if (false) {
             DB = new AWS.DynamoDB({endpoint: new AWS.Endpoint('http://localhost:8000')});
             DB.config.update({accessKeyId: "myKeyId", secretAccessKey: "secretKey", region: "us-east-1"});
             console.log("USING LOCAL");
@@ -51,9 +51,11 @@ var data = (function () {
                     var storyCount = tableStoryData.Count;
                     var randomStoryIndex = (Math.floor(Math.random() * storyCount));
                     var story = tableStoryData.Items[randomStoryIndex].Story.S;
-                    //var author = tableStoryData.Items[randomStoryIndex].Story.S;
+                    var storyDate = tableStoryData.Items[randomStoryIndex].DateStamp.N.toString();
+                    var storyTime = tableStoryData.Items[randomStoryIndex].TimeStamp.N.toString();
+
                     console.log("Data _gettingStory_ " + story);
-                    callback(story, tableStoryData.Items[randomStoryIndex].Date, tableStoryData.Items[randomStoryIndex].Time);
+                    callback(story, storyDate, storyTime);
                 }
             });
         },

@@ -17,10 +17,10 @@
   },
   "request": {
     "type": "IntentRequest",
-    "requestId": "UpVoteIntent",
+    "requestId": "ListenIntent",
     "timestamp": "2015-05-13T12:34:56Z",
     "intent": {
-      "name": "UpVoteIntent",
+      "name": "ListenIntent",
       "slots": {
         "Story": {
           "name": "Story",

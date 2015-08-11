@@ -42,22 +42,28 @@ var sixWords = (function () {
             // Get a story from data.
             data.getRandomStory(function (nextStory, storyDate, storyTime) {
                 // Save the storyDate and storyTime to make sure we know which story was read.
+                if (!session.attributes) session.attributes = {};
                 session.attributes.storyDate = storyDate;
                 session.attributes.storyTime = storyTime;
 
                 // Read the story, Alexa, ask if they want to up vote it.
-                var ratingAnnouncement = ". . . If you liked that story, you can say, up vote.";
+                var ratingAnnouncement = ". . . If you liked that story, you can say, up vote. ";
                 ratingAnnouncement += "Or you can say listen to hear another story.";
                 alexaSpeak(nextStory + ratingAnnouncement, session, context, false);
             });
         },
         UpVoteIntent: function (intent, session, context) {
             // If there is a story saved in the session, then we're ready to upvote.
+            console.log(session.attributes);
             if (!session.attributes) session.attributes = {};
             if (session.attributes.storyDate && session.attributes.storyTime) {
                 data.incrementStoryRating(session.attributes.storyDate, session.attributes.storyTime, function (error) {
                     if (error) { console.log("SixWords _upVoteIntent  ERROR "+error);
                     } else {
+                        // Up vote done, now clear out the story date and time, and respond.
+                        session.attributes.storyDate = undefined;
+                        session.attributes.storyTime = undefined;
+
                         var upVoteResponse = "Great, I've given the story an up vote. ";
                         upVoteResponse += "Say listen to hear another story.";
                         alexaSpeak(upVoteResponse, session, context, false);
@@ -171,6 +177,7 @@ var sixWords = (function () {
         };
 
         // Add the session attributes to the response.
+        console.log(session.attributes);
         alexaResponse.sessionAttributes = session.attributes;
 
         // Send it to Alexa.
