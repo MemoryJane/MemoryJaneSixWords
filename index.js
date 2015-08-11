@@ -7,8 +7,9 @@ var sixWords = (function () {
 
     // When a new session starts, initialize anything that needs initializing.
     function onSessionStarted(sessionStartedRequest, session, context) {
-        // If we don't have any attributes, create an empty set.
+        // If we don't have any attributes, initialize it..
         if (!session.attributes) session.attributes = {};
+        session.attributes.timeStarted = new Date().toString();
 
         // TODO Maybe fire up the DB here?
     }
@@ -17,7 +18,7 @@ var sixWords = (function () {
     var requestHandlers = {
         LaunchRequest: function (event, context) {
             // Send a welcome message. Ask if the user wants to listen to a story.
-            var welcomeMessage = "Welcome to, Six, Word, Stories. ";
+            var welcomeMessage = "Welcome to Six Word Stories. ";
             welcomeMessage += "You can say, listen, to hear an awesome little six word story.";
             alexaSpeak(welcomeMessage, event.session, context, false);
         },
@@ -63,19 +64,32 @@ var sixWords = (function () {
                 alexaSpeak(oopsResponse, session, context, false);
             } else {
                 // If we just heard a story, then we're ready to up vote.
-                data.incrementStoryRating(session.attributes.timeStamp, function (error) {
-                    if (error) { console.log("SixWords _upVoteIntent  ERROR "+error);
+                data.incrementStoryRating(session.attributes.timeStamp, function (incrementError) {
+                    if (incrementError) { console.log("SixWords _upVoteIntent incrementRating  ERROR "+incrementError);
                     } else {
-                        // Up vote done, now clear out the state, and respond.
+                        // Up vote done, now clear out the state, prepare the response.
                         session.attributes.storyState = undefined;
-
                         var upVoteResponse = "Great, I've given the story an up vote. ";
-                        upVoteResponse += "Say, listen, to hear another story.";
-                        alexaSpeak(upVoteResponse, session, context, false);
+                        upVoteResponse += "You can say, listen, to hear another story.";
+
+                        // Did the user include a reaction?
+                        if (intent.slots && intent.slots.Reaction && intent.slots.Reaction.value) {
+                            // Yes! Add the reaction to our DB as well.
+                            // data.addStoryReaction(session.attributes.storyDate, session.attributes.storyTime, intent.slots.Reaction.value, function(addReactionError) {
+                            //    if (addReactionError) {
+                            //        console.log("SixWords _upVoteIntent addReaction  ERROR " + error);
+                            //    } else {
+                                    alexaSpeak(upVoteResponse, session, context, false);
+                            //    }
+                            //});
+                        } else {
+                            alexaSpeak(upVoteResponse, session, context, false);
+                        }
                     }
                 });
             }
         },
+
         CreateIntent: function (intent, session, context) {
             // Let's create a story - did the user give us the 6 words we need?
             if (!intent.slots || !intent.slots.Story || !intent.slots.Story.value) {
@@ -160,9 +174,6 @@ var sixWords = (function () {
                 alexaSpeak(confirmationResponse, session, context, false);
             }
         },
-        QuitIntent: function(intent, session, context) {
-            alexaSpeak("Goodbye", session, context, true);
-        },
         HelpIntent: function(intent, session, context) {
             if (session.attributes.storyState == "ThinkingAboutCreating") {
                 //If the user is thinking about creating a story, tell them exactly how to
@@ -177,10 +188,13 @@ var sixWords = (function () {
                     " . Did I hear you correctly?", session, context, false);
             } else {
                 //If the user just entered the session, give them a generic help message
-                var welcomeMessage = "Welcome to, Six, Word, Stories! You can say, listen, to hear an awesome" +
+                var welcomeMessage = "Welcome to Six Word Stories! You can say, listen, to hear an awesome" +
                     " six word story or say, create, to write your own story. What would you like to do?";
                 alexaSpeak(welcomeMessage, session, context, false);
             }
+        },
+        QuitIntent: function(intent, session, context) {
+            alexaSpeak("Goodbye", session, context, true);
         }
     };
 
