@@ -106,8 +106,8 @@ var data = (function () {
         addStoryReaction: function (reaction, storyId, userId, callback) {
             var newReactionParams = { TableName: 'MemoryJaneSixWordReactions',
                 Item: {
-                    TimeStamp: { "N": getTimeStamp().toString() },
                     StoryId: {"N": storyId},
+                    TimeStamp: { "N": getTimeStamp().toString() },
                     ReactorId: {"S": userId},
                     Reaction: {"S": reaction}
                 }
