@@ -7,6 +7,9 @@ var sixWords = (function () {
 
     // When a new session starts, initialize anything that needs initializing.
     function onSessionStarted(sessionStartedRequest, session, context) {
+        // If we don't have any attributes, create an empty set.
+        if (!session.attributes) session.attributes = {};
+
         // TODO Maybe fire up the DB here?
     }
 
@@ -42,10 +45,8 @@ var sixWords = (function () {
             // Get a story from data.
             data.getRandomStory(function (nextStory, storyDate, storyTime) {
                 // Save the storyDate and storyTime to make sure we know which story was read.
-                if (!session.attributes) session.attributes = {};
                 session.attributes.storyDate = storyDate;
                 session.attributes.storyTime = storyTime;
-
                 session.attributes.storyState = "JustHeardAStory";
 
                 // Read the story, Alexa, ask if they want to up vote it.
@@ -56,8 +57,6 @@ var sixWords = (function () {
         },
         UpVoteIntent: function (intent, session, context) {
             // If there is a story saved in the session, then we're ready to upvote.
-            console.log(session.attributes);
-            if (!session.attributes) session.attributes = {};
             if (session.attributes.storyDate && session.attributes.storyTime) {
                 data.incrementStoryRating(session.attributes.storyDate, session.attributes.storyTime, function (error) {
                     if (error) { console.log("SixWords _upVoteIntent  ERROR "+error);
@@ -65,7 +64,6 @@ var sixWords = (function () {
                         // Up vote done, now clear out the story date and time, and respond.
                         session.attributes.storyDate = undefined;
                         session.attributes.storyTime = undefined;
-
                         session.attributes.storyState = undefined;
 
                         var upVoteResponse = "Great, I've given the story an up vote. ";
@@ -75,7 +73,6 @@ var sixWords = (function () {
                 });
             } else {
                 session.attributes.storyState = undefined;
-
                 // If there's no story saved in the session, then just invite them to listen.
                 var oopsResponse = "You can say listen to hear a story or create to write your own. ";
                 oopsResponse += "Which would you like?";
@@ -115,7 +112,6 @@ var sixWords = (function () {
                     alexaSpeak(oopsResponse, session, context, false);
                 } else {
                     // They gave us 6 words, so now we save it to the session attributes.
-                    if (!session.attributes) session.attributes = {};
                     session.attributes.userStory = userStory;
                     session.attributes.storyState = "JustCreatedAStory";
 
@@ -174,7 +170,7 @@ var sixWords = (function () {
         HelpIntent: function(intent, session, context) {
             if (session.attributes.storyState == "ThinkingAboutCreating") {
                 //If the user is thinking about creating a story, tell them exactly how to
-                alexaSpeak("To create a story, say create followed by any six words six words", session, context, false);
+                alexaSpeak("To create a story, say create followed by any six words.", session, context, false);
                 //TODO expert punctuation
             } else if (session.attributes.storyState == "JustHeardAStory") {
                 //If the user just heard a story, give them a help message helping them to listen to another
@@ -206,9 +202,7 @@ var sixWords = (function () {
                 shouldEndSession: endSession
             }
         };
-
         // Add the session attributes to the response.
-        console.log(session.attributes);
         alexaResponse.sessionAttributes = session.attributes;
 
         // Send it to Alexa.
