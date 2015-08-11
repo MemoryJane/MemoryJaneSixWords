@@ -12,7 +12,8 @@
     "attributes": {
       "userStory": "banana banana banana banana banana banana period",
       "storyDate": "9082015",
-      "storyTime": "930348493049"
+      "storyTime": "930348493049",
+      "storyState": "JustHeardAStory"
     }
   },
   "request": {
@@ -20,11 +21,15 @@
     "requestId": "ListenIntent",
     "timestamp": "2015-05-13T12:34:56Z",
     "intent": {
-      "name": "ListenIntent",
+      "name": "UpVoteIntent",
       "slots": {
         "Story": {
           "name": "Story",
           "value": "this is my story monkey boy period"
+        },
+        "Reaction": {
+          "name": "Reaction",
+          "value": "dag"
         }
       }
     }
