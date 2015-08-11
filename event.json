@@ -13,12 +13,13 @@
       "userStory": "banana banana banana banana banana banana period",
       "storyDate": "9082015",
       "storyTime": "930348493049",
+      "timeStamp": "2864420412082015",
       "storyState": "JustHeardAStory"
     }
   },
   "request": {
     "type": "IntentRequest",
-    "requestId": "ListenIntent",
+    "requestId": "UpVoteIntent",
     "timestamp": "2015-05-13T12:34:56Z",
     "intent": {
       "name": "UpVoteIntent",
@@ -29,7 +30,7 @@
         },
         "Reaction": {
           "name": "Reaction",
-          "value": "dag"
+          "value": "dag dude"
         }
       }
     }

@@ -64,32 +64,84 @@ var sixWords = (function () {
                 alexaSpeak(oopsResponse, session, context, false);
             } else {
                 // If we just heard a story, then we're ready to up vote.
+                // First off, did we get a reaction in addition to the up vote?
+                var reactionResponse = "";
+                if (intent.slots && intent.slots.Reaction && intent.slots.Reaction.value) {
+                    var reaction = intent.slots.Reaction.value;
+                    if (reaction.split(" ").length = 1) {
+                        // We got a valid reaction, so create a short reaction response.
+                        reactionResponse = "with the reaction. "+reaction;
+                    } else {
+                        // Dang, we got a reaction, but it's too too long or empty.
+                        // Don't add the up vote, just tell the user to try again.
+                        var retryUpVoteResponse = "Oops, reactions can only be one word, and I heard your ";
+                        retryUpVoteResponse += "reaction as "+reaction+" . Try saying, up vote with reaction, then ";
+                        retryUpVoteResponse += "your single word reaction.";
+                        alexaSpeak(retryUpVoteResponse, session, context, false);
+                        return;
+                    }
+                }
+
+                // Okay, now we can increment the story rating.
                 data.incrementStoryRating(session.attributes.timeStamp, function (incrementError) {
                     if (incrementError) { console.log("SixWords _upVoteIntent incrementRating  ERROR "+incrementError);
                     } else {
-                        // Up vote done, now clear out the state, prepare the response.
+                        // Up vote done, now clear out the state and prepare the response.
                         session.attributes.storyState = undefined;
-                        var upVoteResponse = "Great, I've given the story an up vote. ";
+                        var upVoteResponse = "Great, I've given the story an up vote"+reactionResponse+". ";
                         upVoteResponse += "You can say, listen, to hear another story.";
 
-                        // Did the user include a reaction?
-                        if (intent.slots && intent.slots.Reaction && intent.slots.Reaction.value) {
-                            // Yes! Add the reaction to our DB as well.
-                            // data.addStoryReaction(session.attributes.storyDate, session.attributes.storyTime, intent.slots.Reaction.value, function(addReactionError) {
-                            //    if (addReactionError) {
-                            //        console.log("SixWords _upVoteIntent addReaction  ERROR " + error);
-                            //    } else {
+                        // If there was a reaction, add it to our DB.
+                        if (reactionResponse != "") {
+                            var userId = session.user.userId;
+                            var storyId = session.attributes.timeStamp;
+                            data.addStoryReaction(reaction, storyId, userId, function(addReactionError) {
+                                if (addReactionError) {
+                                    console.log("SixWords _upVoteIntent addReaction  ERROR " + error);
+                                } else {
                                     alexaSpeak(upVoteResponse, session, context, false);
-                            //    }
-                            //});
+                                }
+                            });
                         } else {
+                            // No reaction? No problem, just send the up vote response.
                             alexaSpeak(upVoteResponse, session, context, false);
                         }
                     }
                 });
             }
         },
+        HearReactionsIntent: function (intent, session, context) {
+            // If we haven't just heard a story, then the user is confused. Give them some help.
+            if (session.attributes.storyState != "JustHeardAStory") {
+                session.attributes.storyState = undefined;
+                var oopsResponse = "You can say, listen, to hear a story or, create, to write your own. ";
+                oopsResponse += "Which would you like to do?";
+                alexaSpeak(oopsResponse, session, context, false);
+            } else {
+                // The user wants to hear the reactions for the most recent story.
+                data.getLatestStoryReactions(session.attributes.timeStamp, function(reactions, getReactionsError){
+                    if (getReactionsError) {
+                        console.log("SixWords _hearReactionsIntent getReactions  ERROR " + error);
+                    } else {
+                        var reactionsResponse = "Reactions to this story are. ";
 
+                        // Were there any reactions for this story?
+                        if (!reactions) {
+                            // Nope, let the user down easy, and tell them how to be the first to react.
+                            reactionsResponse = "Sorry, there aren't any reactions for this story yet. ";
+                            reactionsResponse += "But you can be first, just say up vote with reaction, ";
+                            reactionsResponse += "and then say your one word reaction.";
+                        } else {
+                            // Tell the user the reactions.
+                            for (i = 0; i < reactions.length; i++) {
+                                reactionsResponse += reactions[i]+". ";
+                            }
+                        }
+                        alexaSpeak(reactionsResponse, session, context, false);
+                    }
+                });
+            }
+        },
         CreateIntent: function (intent, session, context) {
             // Let's create a story - did the user give us the 6 words we need?
             if (!intent.slots || !intent.slots.Story || !intent.slots.Story.value) {
