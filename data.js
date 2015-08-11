@@ -24,13 +24,13 @@ var data = (function () {
 
     function getTimeStamp (){
         var rightNow = new Date();
-        return timeStamp = Number(rightNow.getUTCFullYear())
-            +((rightNow.getUTCMonth()+1)*10000)
-            +((rightNow.getUTCDate()+1)*1000000)
+        return timeStamp = Number(rightNow.getUTCMilliseconds())
+            +((rightNow.getUTCSeconds()+1)*10000)
+            +((rightNow.getUTCMinutes()+1)*1000000)
             +(rightNow.getUTCHours()*100000000)
-            +(rightNow.getUTCMinutes()*10000000000)
-            +(rightNow.getUTCSeconds()*1000000000000)
-            +(rightNow.getUTCMilliseconds()*10000000000000);
+            +(rightNow.getUTCDate()*10000000000)
+            +(rightNow.getUTCMonth()*1000000000000)
+            +(rightNow.getUTCFullYear()*10000000000000);
     }
 
     return {
@@ -96,12 +96,19 @@ var data = (function () {
             });
         },
 
+        /**
+         * Adds a reaction to a current story
+         * @param reaction
+         * @param storyId
+         * @param userId
+         * @param callback
+         */
         addStoryReaction: function (reaction, storyId, userId, callback) {
             var newReactionParams = { TableName: 'MemoryJaneSixWordReactions',
                 Item: {
                     TimeStamp: { "N": getTimeStamp().toString() },
                     StoryId: {"N": storyId},
-                    UserId: {"S": userId},
+                    ReactorId: {"S": userId},
                     Reaction: {"S": reaction}
                 }
             };
@@ -118,7 +125,7 @@ var data = (function () {
          * @param callback
          */
         getStoryRating: function (storyId, callback){
-            // Get all of the data for the specific story you are looking for
+            // Get the rating for the specific story you are looking for
             var storyRatingParams = { TableName: 'MemoryJaneSixWordStories',
                 Item: {
                     TimeStamp: { "N": storyId }
@@ -134,7 +141,32 @@ var data = (function () {
         },
 
         getLatestStoryReactions: function (storyId, callback){
-            callback(["terrible","loser","stink","stank","stunk"]);
+            // Get the reactions for the specific story you are looking for
+            var storyReactionParams = { TableName: 'MemoryJaneSixWordReactions',
+                KeyConditionExpression: '#hashkey = :hk_val',
+                ExpressionAttributeNames: {
+                    '#hashkey': "storyId"
+                },
+                ExpressionAttributeValues: {
+                    ':hk_val': {N: storyId}
+                }
+            };
+            dynamodb.query(storyReactionParams, function (storyReactionErr, storyReactionData) {
+                if (storyReactionErr) console.log("Data _tableScan_  ERROR " + storyReactionErr);
+                else {
+                    var count = storyReactionData.Count;
+                    if (count == 0) {
+                        callback(undefined);
+                    }
+                    else{
+                        var reactions = [];
+                        for (i = 0; i < count; i++) {
+                            reactions[i] = storyReactionData.Items[i].Reaction.S;
+                        }
+                        callback(reactions);
+                    }
+                }
+            });
         },
 
         /**

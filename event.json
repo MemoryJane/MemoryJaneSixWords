@@ -11,7 +11,7 @@
     },
     "attributes": {
       "userStory": "banana banana banana banana banana banana period",
-      "storyDate": "9082015",
+      "storyId": "2864420412082015",
       "storyTime": "930348493049",
       "timeStamp": "2864420412082015",
       "storyState": "JustHeardAStory"
@@ -19,10 +19,10 @@
   },
   "request": {
     "type": "IntentRequest",
-    "requestId": "UpVoteIntent",
+    "requestId": "HearReactionsIntent",
     "timestamp": "2015-05-13T12:34:56Z",
     "intent": {
-      "name": "UpVoteIntent",
+      "name": "HearReactionsIntent",
       "slots": {
         "Story": {
           "name": "Story",
