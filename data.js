@@ -84,6 +84,7 @@ var data = (function () {
          */
         incrementStoryRating: function (time, callback) {
             // Get the current rating.
+            console.log(time);
             var updateItemParams = {
                 TableName : "MemoryJaneSixWordStories",
                 Key : { TimeStamp : { "N" : time } },
@@ -106,7 +107,7 @@ var data = (function () {
         addStoryReaction: function (reaction, storyId, userId, callback) {
             var newReactionParams = { TableName: 'MemoryJaneSixWordReactions',
                 Item: {
-                    StoryId: {"N": storyId},
+                    storyId: {"N": storyId},
                     TimeStamp: { "N": getTimeStamp().toString() },
                     ReactorId: {"S": userId},
                     Reaction: {"S": reaction}
@@ -114,7 +115,7 @@ var data = (function () {
             };
 
             dynamodb.putItem(newReactionParams, function (reactionErr, reactionData) {
-                if (reactionErr) errorCallback(reactionErr);
+                if (reactionErr) callback(reactionErr);
                 else callback();
             });
         },
