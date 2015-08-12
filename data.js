@@ -150,7 +150,9 @@ var data = (function () {
                 },
                 ExpressionAttributeValues: {
                     ':hk_val': {N: storyId}
-                }
+                },
+                ScanIndexForward: true,
+                Limit: 5
             };
             dynamodb.query(storyReactionParams, function (storyReactionErr, storyReactionData) {
                 if (storyReactionErr) console.log("Data _tableScan_  ERROR " + storyReactionErr);
