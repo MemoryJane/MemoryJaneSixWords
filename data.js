@@ -194,6 +194,48 @@ var data = (function () {
                 if (resultErr) errorCallback(resultErr);
                 else errorCallback();
             });
+        },
+
+        getNews: function(user, callback){
+            var storyReactionParams = { TableName: 'MemoryJaneSixWordNews',
+                KeyConditionExpression: '#hashkey = :hk_val AND #rangekey >= :rk_val',
+                ExpressionAttributeNames: {
+                    '#hashkey': "userId",
+                    '#rangekey': "TimeStamp"
+                },
+                ExpressionAttributeValues: {
+                    ':hk_val': {S: user},
+                    ':rk_val': {N: "0"}
+                },
+                ScanIndexForward: false,
+                Limit: 1
+            };
+            dynamodb.query(storyReactionParams, function (newsQueryErr, newsQueryData) {
+                if (newsQueryErr) console.log("Data _tableScan_  ERROR " + newsQueryErr);
+                if (!newsQueryData.Items[0]){
+                    callback(undefined);
+                } else {
+                    console.log("into else");
+                    console.log(newsQueryData);
+                    callback(newsQueryData.Items[0].News.S);
+                }
+            });
+        },
+
+        addNews: function (userId, news, callback) {
+            var newNewsParams = { TableName: 'MemoryJaneSixWordNews',
+                Item: {
+                    userId: {"S": userId},
+                    TimeStamp: { "N": getTimeStamp().toString() },
+                    News: {"S": news},
+                    Read: {"B": false}
+                }
+            };
+
+            dynamodb.putItem(newNewsParams, function (reactionErr, reactionData) {
+                if (reactionErr) callback(reactionErr);
+                else callback();
+            });
         }
     }
 }) ();

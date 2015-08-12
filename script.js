@@ -8,6 +8,12 @@ var script = (function () {
         LaunchRequest_Reaction: "Welcome to Six Word Stories.",
         LaunchRequest_Instruction: "You can say tell me a story to hear an awesome little six word story.",
 
+        GivenNews_Reaction: "You have one piece of news.",
+        GivenNews_Instruction: "To hear it say yes, to not hear it say no",
+        GivingNews_Reaction: "Your news is: %1.",
+        GivingNews_Instruction: "You can say tell me a story to hear a story or publish to write your own. " +
+        "Which would you like to do?",
+
         ListenIntentAndBlank_Reaction: "%1 .",
         ListenIntentAndBlank_Instruction: "If you liked that story, you can say, plus one. " +
         "Or you can say tell me a story to hear another story.",

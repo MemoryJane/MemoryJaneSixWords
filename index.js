@@ -19,8 +19,17 @@ var sixWords = (function () {
     // Request handlers - launch, intent and ended.
     var requestHandlers = {
         LaunchRequest: function (event, context) {
-            // Send a welcome message. Ask if the user wants to listen to a story.
-            alexaSpeak("LaunchRequest", null, event.session, context, false);
+            data.getNews(event.session.user.userId, function(news){
+                if (news == undefined){
+                    // Send a welcome message. Ask if the user wants to listen to a story.
+                    alexaSpeak("LaunchRequest", null, event.session, context, false);
+                }else{
+                    //Ask the user if they want to receive their news
+                    event.session.attributes.storyState = "GivenNewsPrompt";
+                    event.session.attributes.News = news;
+                    alexaSpeak("GivenNews", null, event.session, context, false);
+                }
+            });
         },
 
         IntentRequest: function (event, context) {
@@ -174,8 +183,11 @@ var sixWords = (function () {
             }
         },
         YesIntent: function(intent, session, context) {
-            // If we didn't just create a story, then this intent is not valid, give them some instructions.
-            if (session.attributes.storyState != "JustCreatedAStory") {
+            if (session.attributes.storyState == "GivenNewsPrompt"){
+                //If the user was told that they have news and they said yes, give them the news
+                alexaSpeak("GivingNews", session.attributes.News, session, context, false);
+            }else if (session.attributes.storyState != "JustCreatedAStory") {
+                // If we didn't just create a story, then this intent is not valid, give them some instructions.
                 session.attributes.storyState = undefined;
                 alexaSpeak("BadState", null, session, context, false);
             } else {
@@ -194,8 +206,12 @@ var sixWords = (function () {
             }
         },
         NoIntent: function(intent, session, context) {
-            // If we didn't just create a story, then this intent is not valid, give them some instructions.
-            if (session.attributes.storyState != "JustCreatedAStory") {
+            if (session.attributes.storyState == "GivenNewsPrompt"){
+                //If the user was prompted for news and said no
+                session.attributes.storyState = undefined;
+                alexaSpeak("BadState", null, session, context, false);
+            }else if (session.attributes.storyState != "JustCreatedAStory") {
+                // If we didn't just create a story, then this intent is not valid, give them some instructions.
                 session.attributes.storyState = undefined;
                 alexaSpeak("BadState", null, session, context, false);
             } else {
