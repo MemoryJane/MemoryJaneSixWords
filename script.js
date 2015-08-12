@@ -47,7 +47,7 @@ var script = (function () {
         HelpIntent_Instruction: "You can say tell me a story to hear an awesome six word story " +
         "or say publish to write your own. What would you like to do?",
 
-        QuitIntent_Instruction: "Goodbye."
+        QuitIntent_Instruction: "Goodbye.",
 
         Reprompt_Reaction: "Sorry, I didn't understand."
     };
