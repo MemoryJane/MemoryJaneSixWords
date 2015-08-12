@@ -27,8 +27,8 @@ var script = (function () {
         CreateIntentNoStory_Reaction: "Great, let's make a story.",
         CreateIntentNoStory_Instruction: "Say publish followed by any six words.",
 
-        CreateIntentBadStoru_Reaction: "Oops.",
-        CreateIntentBadStoru_Instruction: "I heard you try to publish the following story: %1. " +
+        CreateIntentBadStory_Reaction: "Oops.",
+        CreateIntentBadStory_Instruction: "I heard you try to publish the following story: %1. " +
         "But our stories require exactly 6 words. Try again. Say publish followed by your six words.",
 
         CreateIntentGoodStory_Reaction: "Cool!",

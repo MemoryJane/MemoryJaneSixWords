@@ -12,6 +12,7 @@ var sixWords = (function () {
         if (!session.attributes) session.attributes = {};
         session.attributes.timeStarted = new Date().toString();
 
+        data.putUserActivity(session.user.userId, "", "SessionStarted", function callback() { });
         // TODO Maybe fire up the DB here?
     }
 
@@ -49,6 +50,7 @@ var sixWords = (function () {
                 // Save the story index to make sure we know which story was read.
                 session.attributes.recentStoryIndex = timeStamp;
                 session.attributes.storyState = "JustHeardAStory";
+                data.putUserActivity(session.user.userId, timeStamp, "Listen", function callback() { });
 
                 // Read the story, Alexa, ask if they want to up vote it.
                 var ratingInstruction = script.getScript("ListenIntent", "Instruction");
@@ -80,6 +82,8 @@ var sixWords = (function () {
                         return;
                     }
                 }
+
+                data.putUserActivity(session.user.userId, session.attributes.recentStoryIndex, "Upvote", function callback() { });
 
                 // Okay, now we can increment the story rating.
                 data.incrementStoryRating(session.attributes.recentStoryIndex, function (incrementError) {
@@ -195,11 +199,12 @@ var sixWords = (function () {
                 alexaSpeak("", oopsResponse, session, context, false);
             } else {
                 // We heard the story right, so store it in the DB
-                data.putNewStory(session.user.userId, session.attributes.userStory, function(putStoryError) {
+                data.putNewStory(session.user.userId, session.attributes.userStory, function(timeStamp, putStoryError) {
                     if (putStoryError) console.log("SixWords _yesIntent  ERROR "+putStoryError);
                     else {
                         // Remove the story from the session attributes.
                         session.attributes.storyState = "ThinkingAboutCreating";
+                        data.putUserActivity(session.user.userId, timeStamp, "Create", function callback() { });
 
                         // And ask them to write or listen to another one.
                         var confirmationReaction = script.getScript("YesIntent", "Reaction");
@@ -267,7 +272,7 @@ var sixWords = (function () {
             response: {
                 outputSpeech: { type: 'PlainText', text: reactionMessage+" "+instructionMessage },
                 // for now, just reprompt with the same message. TODO make this accept a unique reprompt?
-                reprompt: { outputSpeech: { type: 'PlainText', text: repromptReaction+instructionMessage} },
+                reprompt: { outputSpeech: { type: 'PlainText', text: repromptReaction+" "+instructionMessage} },
                 shouldEndSession: endSession
             }
         };

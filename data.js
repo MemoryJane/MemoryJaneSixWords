@@ -61,9 +61,10 @@ var data = (function () {
          * @param errorCallback
          */
         putNewStory: function (author, story, errorCallback){
+            var timeStamp = getTimeStamp().toString();
             var newStoryParams = { TableName: 'MemoryJaneSixWordStories',
                 Item: {
-                    TimeStamp: { "N": getTimeStamp().toString() },
+                    TimeStamp: { "N": timeStamp },
                     Rating: {"N": "0"},
                     Story: {"S": story},
                     Author: {"S": author}
@@ -71,8 +72,8 @@ var data = (function () {
             };
 
             dynamodb.putItem(newStoryParams, function (resultErr, data) {
-                if (resultErr) errorCallback(resultErr);
-                else errorCallback();
+                if (resultErr) errorCallback(timeStamp, resultErr);
+                else errorCallback(timeStamp);
             });
         },
 
@@ -174,17 +175,17 @@ var data = (function () {
 
         /**
          * Puts logs of what users do into the database
-         * @param author
+         * @param user
          * @param story
          * @param userAction
          * @param errorCallback
          */
-        putUserActivity: function (author, story, userAction, errorCallback){
+        putUserActivity: function (user, story, userAction, errorCallback){
             var activityParams = { TableName: 'MemoryJaneSixWordStoriesActivity',
                 Item: {
                     TimeStamp: { "N": getTimeStamp().toString() },
+                    User: {"S": user},
                     Story: {"S": story},
-                    Author: {"S": author},
                     UserAction: {"S": userAction}
                 }
             };

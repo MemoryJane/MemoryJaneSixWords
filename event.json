@@ -19,14 +19,14 @@
   },
   "request": {
     "type": "IntentRequest",
-    "requestId": "UpVoteIntent",
+    "requestId": "CreateIntent",
     "timestamp": "2015-05-13T12:34:56Z",
     "intent": {
-      "name": "UpVoteIntent",
+      "name": "CreateIntent",
       "slots": {
         "Story": {
           "name": "Story",
-          "value": "this is my story monkey boy period"
+          "value": "this comma is comma the comma best comma story comma ever comma"
         },
         "Reaction": {
           "name": "Reaction",
