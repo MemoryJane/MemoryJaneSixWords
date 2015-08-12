@@ -67,7 +67,7 @@ var sixWords = (function () {
                 var reactionResponse = "";
                 if (intent.slots && intent.slots.Reaction && intent.slots.Reaction.value) {
                     var reaction = intent.slots.Reaction.value;
-z                   if (reaction.split(" ").length == 1) {
+                    if (reaction.split(" ").length == 1) {
                         // We got a valid reaction, so create a short reaction response.
                         reactionResponse = script.getScript("UpVoteIntentWithReaction", "WithTheReaction")+" "+reaction;
                     } else {
