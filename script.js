@@ -48,7 +48,7 @@ var script = (function () {
         YesIntent_Instruction: "What would you like to do next? You can publish another story or say tell me a story.",
 
         NoIntent_Reaction: [
-            "Oops, sorry about that. Let's try again.".,
+            "Oops, sorry about that. Let's try again.",
             "Rats. Give me another shot.",
             "Dang. Sorry, I must have misunderstood you. Let me try again." ],
         NoIntent_Instruction: "Say publish followed by any six words.",
