@@ -1,3 +1,7 @@
+/**
+ * These are all of the responses for the Six Words app.
+ * @type {{getScript}}
+ */
 var script = (function () {
 
     var script = {
@@ -24,20 +28,29 @@ var script = (function () {
         HearReactionsIntentBadReaction_Instruction: "There aren't any reactions for this story yet. " +
         "But you can be first, just say plus one with reaction, and then say your one word reaction.",
 
-        CreateIntentNoStory_Reaction: "Great, let's make a story.",
+        CreateIntentNoStory_Reaction: [
+            "Great, let's make a story.",
+            "I love creating new stories, let's do it!",
+            "Oooh, can't wait to hear your story." ],
         CreateIntentNoStory_Instruction: "Say publish followed by any six words.",
 
-        CreateIntentBadStory_Reaction: "Oops.",
+        CreateIntentBadStory_Reaction: [ "Oops.", "Shoot.", "Whoops." ],
         CreateIntentBadStory_Instruction: "I heard you try to publish the following story: %1. " +
         "But our stories require exactly 6 words. Try again. Say publish followed by your six words.",
 
-        CreateIntentGoodStory_Reaction: "Cool!",
+        CreateIntentGoodStory_Reaction: [ "Cool!", "Sweet!", "Bingo!" ],
         CreateIntentGoodStory_Instruction: "I just want to confirm I heard it right. Did you say %1?",
 
-        YesIntent_Reaction: "Coolio! Your story is saved. I can't wait for other people to hear it.",
+        YesIntent_Reaction: [
+            "Coolio! Your story is saved. I can't wait for other people to hear it.",
+            "Coolio! I got your story and I'll share it with other users.",
+            "Coolio! You're published." ],
         YesIntent_Instruction: "What would you like to do next? You can publish another story or say tell me a story.",
 
-        NoIntent_Reaction: "Oops, sorry about that. Let's try again.",
+        NoIntent_Reaction: [
+            "Oops, sorry about that. Let's try again.".,
+            "Rats. Give me another shot.",
+            "Dang. Sorry, I must have misunderstood you. Let me try again." ],
         NoIntent_Instruction: "Say publish followed by any six words.",
 
         HelpIntentCreating_Instruction: "To create a story, say publish followed by any six words.",
@@ -47,7 +60,7 @@ var script = (function () {
         HelpIntent_Instruction: "You can say tell me a story to hear an awesome six word story " +
         "or say publish to write your own. What would you like to do?",
 
-        QuitIntent_Instruction: "Goodbye.",
+        QuitIntent_Instruction: [ "Goodbye.", "Okay, come back soon!", "Ciao!" ],
 
         Reprompt_Reaction: "Sorry, I didn't understand."
     };
@@ -55,7 +68,17 @@ var script = (function () {
 
     return {
         getScript: function(scriptKey, scriptPiece) {
-            return script[scriptKey+"_"+scriptPiece];
+            var scriptToReturn = script[scriptKey+"_"+scriptPiece];
+
+            // If the script they're looking for is an array, then it has variation and we need to get a random
+            // version of the script.
+            if (script[scriptKey+"_"+scriptPiece] && Array.isArray(script[scriptKey+"_"+scriptPiece])) {
+                var scriptArrayCount = script[scriptKey+"_"+scriptPiece].length;
+                var randomIndex = (Math.floor(Math.random() * scriptArrayCount));
+                scriptToReturn = script[scriptKey+"_"+scriptPiece][randomIndex];
+            }
+
+            return scriptToReturn;
         }
     }
 }) ();
