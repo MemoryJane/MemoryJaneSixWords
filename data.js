@@ -24,12 +24,12 @@ var data = (function () {
 
     function getTimeStamp (){
         var rightNow = new Date();
-        return timeStamp = Number(rightNow.getUTCMilliseconds())
+        return timeStamp = Number(rightNow.getUTCMilliseconds()+1)
             +((rightNow.getUTCSeconds()+1)*10000)
             +((rightNow.getUTCMinutes()+1)*1000000)
-            +(rightNow.getUTCHours()*100000000)
+            +((rightNow.getUTCHours()+1)*100000000)
             +(rightNow.getUTCDate()*10000000000)
-            +(rightNow.getUTCMonth()*1000000000000)
+            +((rightNow.getUTCMonth()+1)*1000000000000)
             +(rightNow.getUTCFullYear()*10000000000000);
     }
 
