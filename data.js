@@ -262,18 +262,18 @@ var data = (function () {
                 if (!newsQueryData.Items[0]){
                     callback(undefined);
                 } else {
-                    if (newsQueryData.Items[0].Read.S == true){
+                    if (newsQueryData.Items[0].Read.S == "true"){
                         callback(undefined);
                     }else {
                         var updateItemParams = {
                             TableName : "MemoryJaneSixWordNews",
-                            Key : { userId : { "S" : user } },
+                            Key : { userId : { "S" : user }, TimeStamp : { "N": newsQueryData.Items[0].TimeStamp.N } },
                             UpdateExpression : "SET #approved = :isTrue",
                             ExpressionAttributeNames : { "#approved" : "Read" },
-                            ExpressionAttributeValues : { ":isTrue" : {"BOOL":true} }
+                            ExpressionAttributeValues : { ":isTrue" : {"S":"true"} }
                         };
-                        dynamodb.updateItem(updateItemParams, function(newsQueryErr, newsQueryData){
-                            console.log(newsQueryData);
+                        dynamodb.updateItem(updateItemParams, function(newsQueryErr, newsData){
+                            console.log(newsData);
                             callback(newsQueryData.Items[0].News.S);
                         });
                     }
