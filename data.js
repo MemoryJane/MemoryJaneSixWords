@@ -439,7 +439,7 @@ var data = (function () {
 
         /**
          * Call this to see if there are theme stories for this user to hear.
-         * Returns a boolean if there are, and a string that is the theme of the day.
+         * Returns true if there are, and a string that is the theme of the day.
          * This function only returns true once per day, to ensure users don't get overwhelmed with
          * requests to hear the theme stories.
          */
@@ -453,7 +453,31 @@ var data = (function () {
          * requests to create a theme story.
          */
         isThereAThemeToPromptFor: function(userId, isThereAThemeCallback) {
-            isThereAThemeCallback(true, "starts with the word banana");
+            // We're looking for any themes where now is between the start and end times.
+            var themeParams= { TableName: 'MemoryJaneSixWordThemes',
+                FilterExpression: '#startTime <= :now AND #endTime >= :now',
+                ExpressionAttributeNames: {
+                    '#startTime': "TimeStart",
+                    '#endTime': "TimeEnd"
+                },
+                ExpressionAttributeValues: {
+                    ':now': { N: getTimeStamp().toString() }
+                },
+            };
+
+            dynamodb.scan(themeParams, function (themeError, themeData) {
+                if (themeError) throw("Data_isThereAThemeToPromptFor_ERROR "+themeError);
+                else {
+                    // Did we get a theme?
+                    if (themeData.Count == 0) {
+                        // Nope. Return false.
+                        isThereAThemeCallback(false, null);
+                    } else {
+                        // Yep, return the theme.
+                        isThereAThemeCallback(true, themeData.Items[0].ThemeText.S);
+                    }
+                }
+            });
         },
 
         /**
@@ -471,7 +495,42 @@ var data = (function () {
          *
          */
         doesStoryMatchTheme: function(story, getThemeStoriesCallback) {
-            getThemeStoriesCallback(true);
+            // We're looking for any themes where now is between the start and end times.
+            var themeParams= { TableName: 'MemoryJaneSixWordThemes',
+                FilterExpression: '#startTime <= :now AND #endTime >= :now',
+                ExpressionAttributeNames: {
+                    '#startTime': "TimeStart",
+                    '#endTime': "TimeEnd"
+                },
+                ExpressionAttributeValues: {
+                    ':now': { N: getTimeStamp().toString() }
+                },
+            };
+
+            dynamodb.scan(themeParams, function (themeError, themeData) {
+                if (themeError) throw("Data_doesStoryMatchTheme_ERROR "+themeError);
+                else {
+                    // Did we even get a theme?
+                    if (themeData.Count == 0) {
+                        // Nope. Return false.
+                        getThemeStoriesCallback(true);
+                    } else {
+                        // Yep. Let's check to see if the rule is met.
+                        var ruleWords = themeData.Items[0].ThemeRule.S.split(" ");
+                        var storyWords = story.split(" ");
+
+                        var success = true;
+                        for (i = 0; i < storyWords.length; i++) {
+                            // If the ruleWord isn't a wild card, and it's not equal to the storyWord, we fail.
+                            if (ruleWords[i] != "*" && ruleWords[i] != storyWords[i]) {
+                                success = false;
+                                i = storyWords.length;
+                            }
+                        }
+                        getThemeStoriesCallback(success);
+                    }
+                }
+            });
         }
     }
 }) ();
