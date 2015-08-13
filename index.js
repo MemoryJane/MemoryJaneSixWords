@@ -104,7 +104,9 @@ var sixWords = (function () {
                                 if (addReactionError) {
                                     console.log("SixWords _upVoteIntent addReaction  ERROR " + addReactionError);
                                 } else {
-                                    data.addNews(session.attributes.Author, "You received the comment. " + reaction + ". On your story. " + session.attributes.nextStory, function(addNewsError){
+                                    var news = script.getScript("NewsPreamble", "YouGotAComment", 0);
+                                    news = news.replace("%1", reactionResponse)+" "+session.attributes.nextStory;
+                                    data.addNews(session.attributes.Author, news, function(addNewsError){
                                         alexaSpeak("UpVoteIntentAndBlank", reactionResponse, session, context, false);
                                     });
                                 }
@@ -112,7 +114,9 @@ var sixWords = (function () {
                         } else {
                             // No reaction? No problem, just send the up vote response. Have to include the insert
                             // text because this script key has an insert.
-                            data.addNews(session.attributes.Author, "You received a plus one on your story. " + session.attributes.nextStory, function(addNewsError){
+                            var news = script.getScript("NewsPreamble", "YouGotAnUpVote", 0);
+                            news += " "+session.attributes.nextStory;
+                            data.addNews(session.attributes.Author, news, function(addNewsError){
                                 alexaSpeak("UpVoteIntentAndBlank", " ", session, context, false);
                             });
                         }
