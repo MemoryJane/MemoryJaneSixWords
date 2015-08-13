@@ -25,12 +25,12 @@ var data = (function () {
     function getTimeStamp (){
         var rightNow = new Date();
         return timeStamp = Number(rightNow.getUTCMilliseconds()+1)
-            +((rightNow.getUTCSeconds()+1)*10000)
-            +((rightNow.getUTCMinutes()+1)*1000000)
-            +((rightNow.getUTCHours()+1)*100000000)
-            +(rightNow.getUTCDate()*10000000000)
-            +((rightNow.getUTCMonth()+1)*1000000000000)
-            +(rightNow.getUTCFullYear()*10000000000000);
+            +((rightNow.getUTCSeconds()+1)*1000)
+            +((rightNow.getUTCMinutes()+1)*100000)
+            +((rightNow.getUTCHours()+1)*10000000)
+            +(rightNow.getUTCDate()*1000000000)
+            +((rightNow.getUTCMonth()+1)*100000000000)
+            +(rightNow.getUTCFullYear()*100000000000000);
     }
 
     return {
@@ -42,6 +42,7 @@ var data = (function () {
          * @param scriptListenCallback
          */
         incrementScriptListenCount: function(userId, scriptKey, scriptListenCallback) {
+            //Declare parameters for use in updateItem. These increment the listen count by one.
             var incrementScriptParams = {
                 TableName : "MemoryJaneSixWordScriptListens",
                 Key : { UserID : { "S" : userId }, ScriptKey : { "S" : scriptKey } },
@@ -51,17 +52,16 @@ var data = (function () {
             };
 
             dynamodb.updateItem(incrementScriptParams, function(incrementScriptError, incrementScriptData) {
-                if (incrementScriptError) console.log("Data _ incrementScriptListenCount_updateItem_  ERROR " + incrementScriptError);
+                if (incrementScriptError) throw ("Data_incrementScriptListenCount_ERROR_ " + incrementScriptError);
                 else{
                     // Okay, now get the listen count to send back.
                     var getListenCountParams = { TableName: 'MemoryJaneSixWordScriptListens',
                         Key : { UserID : { "S" : userId }, ScriptKey : { "S" : scriptKey } }
                     };
-
                     dynamodb.getItem(getListenCountParams, function(listenError, listenData) {
-                        if (listenError) console.log("Data _ incrementScriptListenCount_getItem_  ERROR " + listenError);
+                        if (listenError) throw("Data_incrementScriptListenCount_ERROR_ " + listenError);
                         else{
-                            scriptListenCallback(listenError, listenData.Item.ListenCount.N);
+                            scriptListenCallback(listenData.Item.ListenCount.N);
                         }
                     });
                 }
@@ -73,21 +73,26 @@ var data = (function () {
          * @param randomStoryCallback
          */
         getRandomStory: function (randomStoryCallback){
-            // Get all of the data from the MemoryJaneSixWordStories Table
-            var tableParams = { TableName: "MemoryJaneSixWordStories",
+            //Declare parameters for use in scan. These scan for all stories in the database that have been approved.
+            var getRandomStoryParams = {
+                TableName: "MemoryJaneSixWordStories",
                 FilterExpression : "#approved = :isTrue",
                 ExpressionAttributeNames : { "#approved" : "Approved" },
                 ExpressionAttributeValues : { ":isTrue" : {"BOOL":true} }
             };
-            dynamodb.scan(tableParams, function (tableStoryErr, tableStoryData) {
-                if (tableStoryErr) console.log("Data _getRandomStory_  ERROR " + tableStoryErr);
-                else {
-                    var storyCount = tableStoryData.Count;
-                    var randomStoryIndex = (Math.floor(Math.random() * storyCount));
-                    var story = tableStoryData.Items[randomStoryIndex].Story.S;
-                    var timeStamp = tableStoryData.Items[randomStoryIndex].TimeStamp.N.toString();
-                    var author = tableStoryData.Items[randomStoryIndex].Author.S;
 
+            dynamodb.scan(getRandomStoryParams, function (randomStoryErr, randomStoryData) {
+                if (randomStoryErr) throw ("Data_getRandomStory_ERROR " + randomStoryErr);
+                else {
+                    //Count the total number of stories and then pick a random index between 0 and count-1.
+                    var storyCount = randomStoryData.Count;
+                    var randomStoryIndex = (Math.floor(Math.random() * storyCount));
+
+                    //Set information for the story, timeStamp and author to the information for the story at the
+                    //random index. Then callback the story, timeStamp and author.
+                    var story = randomStoryData.Items[randomStoryIndex].Story.S;
+                    var timeStamp = randomStoryData.Items[randomStoryIndex].TimeStamp.N.toString();
+                    var author = randomStoryData.Items[randomStoryIndex].Author.S;
                     randomStoryCallback(story, timeStamp, author);
                 }
             });
@@ -100,33 +105,43 @@ var data = (function () {
          * @param authorStoriesCallback
          */
         getStoriesByAuthor: function (numStories, author, authorStoriesCallback){
-            // Get all of the data from the MemoryJaneSixWordStories Table
-            var tableParams = { TableName: "MemoryJaneSixWordStories",
+            //Declare parameters for use in scan. These scan for all stories in the database that are by the author
+            //given and have also been approved.
+            var getStoriesByAuthorParams = {
+                TableName: "MemoryJaneSixWordStories",
                 FilterExpression : "#thisauthor = :author AND #approved = :is_true",
                 ExpressionAttributeNames : { "#thisauthor" : "Author" , "#approved" : "Approved"},
                 ExpressionAttributeValues : { ":author" : {"S": author} , ":is_true" : {"BOOL": true}}
             };
-            dynamodb.scan(tableParams, function (tableStoryErr, tableStoryData) {
-                if (tableStoryErr) console.log("Data _getStoriesByAuthor_  ERROR " + tableStoryErr);
+
+            dynamodb.scan(getStoriesByAuthorParams, function (authorStoryErr, authorStoryData) {
+                if (authorStoryErr) throw ("Data_getStoriesByAuthor_ERROR " + authorStoryErr);
                 else {
-                    var count = tableStoryData.Count;
+                    //Declare empty arrays for the story indexes, stories, timeStamps, and authors for population
+                    //in the for loops.
                     var authorStoryIndexes = [];
                     var stories = [];
                     var timeStamps = [];
                     var authors = [];
 
+                    //Fill the indexes array with unique random numbers between 0 and count-1.
                     for (i = 0; i < numStories; i++){
-                        authorStoryIndexes[i] = (Math.floor(Math.random() *count));
+                        authorStoryIndexes[i] = (Math.floor(Math.random() *authorStoryData.Count));
+                        //Check the random number that was just inserted into the array to confirm that it is different
+                        //than all previous values. If not, decrement i to get a new value.
                         for (j = 0; j < i; j++){
                             if (authorStoryIndexes[i] == authorStoryIndexes[j]){
                                 i--;
                             }
                         }
                     }
+
+                    //Once the index array has been filled, use it to fill the other three arrays with the stories,
+                    //timeStamps and authors at those indexes. Then callback the three arrays.
                     for (i = 0; i < numStories; i++) {
-                        stories[i] = tableStoryData.Items[authorStoryIndexes[i]].Story.S;
-                        timeStamps[i] = tableStoryData.Items[authorStoryIndexes[i]].TimeStamp.N.toString();
-                        authors[i] = tableStoryData.Items[authorStoryIndexes[i]].Author.S;
+                        stories[i] = authorStoryData.Items[authorStoryIndexes[i]].Story.S;
+                        timeStamps[i] = authorStoryData.Items[authorStoryIndexes[i]].TimeStamp.N.toString();
+                        authors[i] = authorStoryData.Items[authorStoryIndexes[i]].Author.S;
                     }
                     authorStoriesCallback(stories, timeStamps, authors);
                 }
@@ -139,33 +154,42 @@ var data = (function () {
          * @param randomStoriesCallback
          */
         getRandomStories: function (numStories, randomStoriesCallback){
-            // Get all of the data from the MemoryJaneSixWordStories Table
-            var tableParams = { TableName: "MemoryJaneSixWordStories",
+            //Declare parameters for use in scan. These scan for all stories in the database that have been approved.
+            var randomStoriesParams = {
+                TableName: "MemoryJaneSixWordStories",
                 FilterExpression : "#approved = :isTrue",
                 ExpressionAttributeNames : { "#approved" : "Approved" },
                 ExpressionAttributeValues : { ":isTrue" : {"BOOL":true} }
             };
-            dynamodb.scan(tableParams, function (tableStoryErr, tableStoryData) {
-                if (tableStoryErr) console.log("Data _getRandomStory_  ERROR " + tableStoryErr);
+
+            dynamodb.scan(randomStoriesParams, function (randomStoriesErr, randomStoriesData) {
+                if (randomStoriesErr) throw ("Data_getRandomStory_ERROR " + randomStoriesErr);
                 else {
-                    var count = tableStoryData.Count;
+                    //Declare empty arrays for the story indexes, stories, timeStamps, and authors for population
+                    //in the for loops.
                     var randomStoryIndexes = [];
                     var stories = [];
                     var timeStamps = [];
                     var authors = [];
 
+                    //Fill the indexes array with unique random numbers between 0 and count-1.
                     for (i = 0; i < numStories; i++){
-                        randomStoryIndexes[i] = (Math.floor(Math.random() *count));
+                        randomStoryIndexes[i] = (Math.floor(Math.random() *randomStoriesData.Count));
+                        //Check the random number that was just inserted into the array to confirm that it is different
+                        //than all previous values. If not, decrement i to get a new value.
                         for (j = 0; j < i; j++){
                             if (randomStoryIndexes[i] == randomStoryIndexes[j]){
                                 i--;
                             }
                         }
                     }
+
+                    //Once the index array has been filled, use it to fill the other three arrays with the stories,
+                    //timeStamps and authors at those indexes. Then callback the three arrays.
                     for (i = 0; i < numStories; i++) {
-                        stories[i] = tableStoryData.Items[randomStoryIndexes[i]].Story.S;
-                        timeStamps[i] = tableStoryData.Items[randomStoryIndexes[i]].TimeStamp.N.toString();
-                        authors[i] = tableStoryData.Items[randomStoryIndexes[i]].Author.S;
+                        stories[i] = randomStoriesData.Items[randomStoryIndexes[i]].Story.S;
+                        timeStamps[i] = randomStoriesData.Items[randomStoryIndexes[i]].TimeStamp.N.toString();
+                        authors[i] = randomStoriesData.Items[randomStoryIndexes[i]].Author.S;
                     }
                     randomStoriesCallback(stories, timeStamps, authors);
                 }
@@ -179,8 +203,12 @@ var data = (function () {
          * @param putStoryCallback
          */
         putNewStory: function (author, story, putStoryCallback){
+            //Declare parameters for use in putItem. These put a new story into the database at an initial rating of
+            //zero, a TimeStamp equal to the current time, Author as the user's userId and Story as the story that
+            //they said to publish.
             var timeStamp = getTimeStamp().toString();
-            var newStoryParams = { TableName: 'MemoryJaneSixWordStories',
+            var newStoryParams = {
+                TableName: 'MemoryJaneSixWordStories',
                 Item: {
                     TimeStamp: { "N": timeStamp },
                     Rating: {"N": "0"},
@@ -190,7 +218,7 @@ var data = (function () {
             };
 
             dynamodb.putItem(newStoryParams, function (putStoryErr, putStoryData) {
-                if (putStoryErr) console.log("Data _putNewStory_  ERROR " + putStoryErr);
+                if (putStoryErr) throw ("Data_putNewStory_ERROR " + putStoryErr);
                 else putStoryCallback(timeStamp);
             });
         },
@@ -202,7 +230,7 @@ var data = (function () {
          * @param incrementStoryCallback
          */
         incrementStoryRating: function (time, incrementStoryCallback) {
-            // Get the current rating.
+            //Declare parameters for use in updateItem. These increment the rating count by one.
             var incrementStoryParams = {
                 TableName : "MemoryJaneSixWordStories",
                 Key : { TimeStamp : { "N" : time } },
@@ -210,8 +238,9 @@ var data = (function () {
                 ExpressionAttributeNames : { "#rating" : "Rating" },
                 ExpressionAttributeValues : { ":increment" : {"N":"1"} }
             };
+
             dynamodb.updateItem(incrementStoryParams, function(incrementStoryErr, updateData) {
-                if (incrementStoryErr) console.log("Data _incrementStoryRating_  ERROR " + incrementStoryErr);
+                if (incrementStoryErr) throw ("Data_incrementStoryRating_ERROR " + incrementStoryErr);
                 else incrementStoryCallback();
             });
         },
@@ -224,7 +253,10 @@ var data = (function () {
          * @param addStoryCallback
          */
         addStoryReaction: function (reaction, storyId, userId, addStoryCallback) {
-            var newReactionParams = { TableName: 'MemoryJaneSixWordReactions',
+            //Declare parameters for use in putItem. These add a new reaction to the reactions table, based on the
+            //story that is being reacted to, the current time, the reactor's userId, and the reaction.
+            var newReactionParams = {
+                TableName: 'MemoryJaneSixWordReactions',
                 Item: {
                     storyId: {"N": storyId},
                     TimeStamp: { "N": getTimeStamp().toString() },
@@ -234,7 +266,7 @@ var data = (function () {
             };
 
             dynamodb.putItem(newReactionParams, function (reactionErr, reactionData) {
-                if (reactionErr) console.log("Data _addStoryReaction_  ERROR " + reactionErr);
+                if (reactionErr) throw ("Data_addStoryReaction_ERROR " + reactionErr);
                 else addStoryCallback();
             });
         },
@@ -242,19 +274,22 @@ var data = (function () {
         /**
          * Gets a specific story's rating from the database and returns it
          * @param storyId
-         * @param callback
+         * @param getStoryRatingCallback
          */
-        getStoryRating: function (storyId, callback){
-            var storyRatingParams = { TableName: 'MemoryJaneSixWordStories',
+        getStoryRating: function (storyId, getStoryRatingCallback){
+            //Declare parameters for use in getItem. These retrieve the item with the specified TimeStamp.
+            var storyRatingParams = {
+                TableName: 'MemoryJaneSixWordStories',
                 Item: {
                     TimeStamp: { "N": storyId }
                 }
             };
-            dynamodb.getItem(storyRatingParams, function (tableStoryErr, tableStoryData) {
-                if (tableStoryErr) console.log("Data _getStoryRating_  ERROR " + tableStoryErr);
+
+            dynamodb.getItem(storyRatingParams, function (storyRatingErr, storyRatingData) {
+                if (storyRatingErr) throw ("Data_getStoryRating_ERROR " + storyRatingErr);
                 else {
-                    var rating = tableStoryData.Rating;
-                    callback(rating);
+                    var rating = storyRatingData.Rating.N;
+                    getStoryRatingCallback(rating);
                 }
             });
         },
@@ -265,8 +300,10 @@ var data = (function () {
          * @param callback
          */
         getLatestStoryReactions: function (storyId, callback){
-            // Get the reactions for the specific story you are looking for
-            var storyReactionParams = { TableName: 'MemoryJaneSixWordReactions',
+            //Declare parameters for use in query. These find all reactions in the table associated with the specific
+            //storyId.
+            var storyReactionParams = {
+                TableName: 'MemoryJaneSixWordReactions',
                 KeyConditionExpression: '#hashkey = :hk_val',
                 ExpressionAttributeNames: {
                     '#hashkey': "storyId"
@@ -277,10 +314,15 @@ var data = (function () {
                 ScanIndexForward: true,
                 Limit: 5
             };
+
             dynamodb.query(storyReactionParams, function (storyReactionErr, storyReactionData) {
-                if (storyReactionErr) console.log("Data _getLatestStoryReactions_  ERROR " + storyReactionErr);
+                if (storyReactionErr) throw ("Data_getLatestStoryReactions_ERROR " + storyReactionErr);
                 else {
+                    //Declare count as the number of items returned by the query
                     var count = storyReactionData.Count;
+
+                    //If no items were returned, the story had no reactions so return undefined. Otherwise, callback
+                    //all of the reactions to the story in array format.
                     if (count == 0) {
                         callback(undefined);
                     }
@@ -300,10 +342,13 @@ var data = (function () {
          * @param user
          * @param story
          * @param userAction
-         * @param errorCallback
+         * @param putUserActivityCallback
          */
-        putUserActivity: function (user, story, userAction, errorCallback){
-            var activityParams = { TableName: 'MemoryJaneSixWordStoriesActivity',
+        putUserActivity: function (user, story, userAction, putUserActivityCallback){
+            //Declare parameters for use in putItem. These enter information into the table when users take certain
+            //actions.
+            var activityParams = {
+                TableName: 'MemoryJaneSixWordStoriesActivity',
                 Item: {
                     TimeStamp: { "N": getTimeStamp().toString() },
                     User: {"S": user},
@@ -312,19 +357,21 @@ var data = (function () {
                 }
             };
 
-            dynamodb.putItem(activityParams, function (resultErr, data) {
-                if (resultErr) errorCallback(resultErr);
-                else errorCallback();
+            dynamodb.putItem(activityParams, function (putUserActivityErr, putUserActivityData) {
+                if (putUserActivityErr) throw ("Data_putUserActivity_ERROR " + putUserActivityErr);
+                else putUserActivityCallback();
             });
         },
 
         /**
          * Gets the latest news update based on the specific user
          * @param user
-         * @param callback
+         * @param getNewsCallback
          */
-        getNews: function(user, callback){
-            var storyReactionParams = { TableName: 'MemoryJaneSixWordNews',
+        getNews: function(user, getNewsCallback){
+            //Declare parameters for use in query. These retrieve all pieces of news associated with a userId.
+            var getNewsParams = {
+                TableName: 'MemoryJaneSixWordNews',
                 KeyConditionExpression: '#hashkey = :hk_val AND #rangekey >= :rk_val',
                 ExpressionAttributeNames: {
                     '#hashkey': "userId",
@@ -337,8 +384,13 @@ var data = (function () {
                 ScanIndexForward: false,
                 Limit: 1
             };
-            dynamodb.query(storyReactionParams, function (newsQueryErr, newsQueryData) {
-                if (newsQueryErr) console.log("Data _tableScan_  ERROR " + newsQueryErr);
+
+            dynamodb.query(getNewsParams, function (newsQueryErr, newsQueryData) {
+                if (newsQueryErr) throw ("Data_getNews_ERROR " + newsQueryErr);
+
+                //If the query returned no news items, return undefined. Otherwise, if the first item returned has
+                //already been read, return undefined. Otherwise, return the most recent piece of news and mark it
+                //as read.
                 if (!newsQueryData.Items[0]){
                     callback(undefined);
                 } else {
@@ -353,8 +405,7 @@ var data = (function () {
                             ExpressionAttributeValues : { ":isTrue" : {"S":"true"} }
                         };
                         dynamodb.updateItem(updateItemParams, function(newsQueryErr, newsData){
-                            console.log(newsData);
-                            callback(newsQueryData.Items[0].News.S);
+                            getNewsCallback(newsQueryData.Items[0].News.S);
                         });
                     }
                 }
@@ -365,10 +416,13 @@ var data = (function () {
          * Adds a news item when a user's stories are reacted to
          * @param userId
          * @param news
-         * @param callback
+         * @param addNewsCallback
          */
-        addNews: function (userId, news, callback) {
-            var newNewsParams = { TableName: 'MemoryJaneSixWordNews',
+        addNews: function (userId, news, addNewsCallback) {
+            //Declare parameters for use in putItem. These put a new news item into the news database under the userId
+            //of the user that the news is for and containing the piece of news for them to read.
+            var newNewsParams = {
+                TableName: 'MemoryJaneSixWordNews',
                 Item: {
                     userId: {"S": userId},
                     TimeStamp: { "N": getTimeStamp().toString() },
@@ -376,11 +430,10 @@ var data = (function () {
                     Read: {"S": "false"}
                 }
             };
-            console.log("IN ADD NEWS");
-            dynamodb.putItem(newNewsParams, function (reactionErr, reactionData) {
-                if (reactionErr) callback(reactionErr);
-                else console.log("ADDED NEWS");
-                callback(reactionErr);
+
+            dynamodb.putItem(newNewsParams, function (addNewsErr, addNewsData) {
+                if (addNewsErr) throw ("Data_addNews_ERROR " + addNewsErr);
+                addNewsCallback();
             });
         },
 
