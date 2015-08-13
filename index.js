@@ -263,6 +263,7 @@ var sixWords = (function () {
                 // If there is some text to insert, do it.
                 if (fullScriptResponse.search("%1") != -1 && insertText) {
                     fullScriptResponse = fullScriptResponse.replace("%1", insertText);
+                    scriptMessage = scriptMessage.replace("%1", insertText);
                 }
 
                 // Log the response.
