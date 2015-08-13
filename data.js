@@ -54,7 +54,7 @@ var data = (function () {
                 };
 
                 dynamodb.getItem(getListenCountParams, function(listenError, listenData) {
-                    scriptListenCallback(listenError, listenData.ListenCount);
+                    scriptListenCallback(listenError, listenData.Item.ListenCount.N);
                 });
             });
         },
