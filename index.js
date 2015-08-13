@@ -78,7 +78,7 @@ var sixWords = (function () {
                     var reaction = intent.slots.Reaction.value;
                     if (reaction.split(" ").length == 1) {
                         // We got a valid reaction, so create a short reaction response.
-                        reactionResponse = script.getScript("UpVoteIntentWithReaction", "WithTheReaction")+" "+reaction;
+                        reactionResponse = script.getScript("UpVoteIntentWithReaction", "WithTheReaction", 0)+" "+reaction;
                     } else {
                         // Dang, we got a reaction, but it's too too long or empty.
                         // Don't add the up vote, just tell the user to try again.
@@ -131,9 +131,6 @@ var sixWords = (function () {
                     if (getReactionsError) {
                         console.log("SixWords _hearReactionsIntent getReactions  ERROR " + error);
                     } else {
-                        var reactionsReaction = script.getScript("HearReactionsIntent", "Reaction")+" ";
-                        var reactionsResponse = script.getScript("HearReactionsIntent", "Instruction");
-
                         // Were there any reactions for this story?
                         if (!reactions) {
                             // Nope, let the user down easy, and tell them how to be the first to react.
@@ -254,36 +251,42 @@ var sixWords = (function () {
      * therefore does not need to be async.
      */
     function alexaSpeak(scriptKey, insertText, session, context, endSession) {
-        // Use the script key to get the reaction and the message.
-        var scriptReaction = script.getScript(scriptKey, "Reaction");
-        var scriptMessage = script.getScript(scriptKey, "Instruction");
-        var fullScriptResponse = scriptReaction+" "+scriptMessage;
+        // Increment the user's verbosity level for this scriptKey, and get the count.
+        data.incrementScriptListenCount(session.user.userId, scriptKey, function(incrementError, verbosityCount) {
+            if (incrementError) console.log("SixWords _alexaSpeak  ERROR "+incrementError);
+            else {
+                // Use the script key to get the reaction and the message.
+                var scriptReaction = script.getScript(scriptKey, "Reaction", verbosityCount);
+                var scriptMessage = script.getScript(scriptKey, "Instruction", verbosityCount);
+                var fullScriptResponse = scriptReaction+" "+scriptMessage;
 
-        // If there is some text to insert, do it.
-        if (fullScriptResponse.search("%1") != -1 && insertText) {
-            fullScriptResponse = fullScriptResponse.replace("%1", insertText);
-        }
+                // If there is some text to insert, do it.
+                if (fullScriptResponse.search("%1") != -1 && insertText) {
+                    fullScriptResponse = fullScriptResponse.replace("%1", insertText);
+                }
 
-        // Log the response.
-        console.log("(*) Alexa Says: "+fullScriptResponse);
+                // Log the response.
+                console.log("(*) Alexa Says: "+fullScriptResponse);
 
-        // Create a reprompt, which is just the message plus a short preamble.
-        var repromptReaction = script.getScript("Reprompt", "Reaction");
+                // Create a reprompt, which is just the message plus a short preamble.
+                var repromptReaction = script.getScript("Reprompt", "Reaction", 0);
 
-        // Create the response for Alexa.
-        var alexaResponse = { version: "1.0",
-            response: {
-                outputSpeech: { type: 'PlainText', text: fullScriptResponse },
-                // for now, just reprompt with the same message. TODO make this accept a unique reprompt?
-                reprompt: { outputSpeech: { type: 'PlainText', text: repromptReaction+" "+scriptMessage} },
-                shouldEndSession: endSession
+                // Create the response for Alexa.
+                var alexaResponse = { version: "1.0",
+                    response: {
+                        outputSpeech: { type: 'PlainText', text: fullScriptResponse },
+                        // Reprompt with the same message, with the reprompt reaction.
+                        reprompt: { outputSpeech: { type: 'PlainText', text: repromptReaction+" "+scriptMessage} },
+                        shouldEndSession: endSession
+                    }
+                };
+                // Add the current session attributes to the response.
+                alexaResponse.sessionAttributes = session.attributes;
+
+                // Send it to Alexa.
+                context.succeed(alexaResponse);
             }
-        };
-        // Add the current session attributes to the response.
-        alexaResponse.sessionAttributes = session.attributes;
-
-        // Send it to Alexa.
-        context.succeed(alexaResponse);
+        });
     }
 
     /*

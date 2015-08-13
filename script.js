@@ -6,7 +6,7 @@ var script = (function () {
 
     var script = {
         LaunchRequest_Reaction: "Welcome to Six Word Stories.",
-        LaunchRequest_Instruction: "You can say tell me a story to hear an awesome little six word story.",
+        LaunchRequest_Instruction: "You can say tell me a story to hear an awesome little six-word story.",
 
         GivenNews_Reaction: "You have one piece of news.",
         GivenNews_Instruction: "To hear it say yes, to not hear it say no",
@@ -14,9 +14,16 @@ var script = (function () {
         GivingNews_Instruction: "You can say tell me a story to hear a story or publish to write your own. " +
         "Which would you like to do?",
 
+        ListenIntentAndBlank_VerbosityKey: { "NOVICE": 5, "MEDIUM": 10 },
         ListenIntentAndBlank_Reaction: "%1 .",
-        ListenIntentAndBlank_Instruction: "If you liked that story, you can say, plus one. " +
+        ListenIntentAndBlank_NOVICE_Instruction: "If you liked that story, you can say, plus one. " +
         "Or you can say tell me a story to hear another story.",
+        ListenIntentAndBlank_MEDIUM_Instruction: "Say plus one with reaction, then say your one word reaction. " +
+        "Or say publish to create or tell me a story to hear more.",
+        ListenIntentAndBlank_EXPERT_Instruction: [
+            "What's next?",
+            "Now what?",
+            "What would you like to do now?"],
 
         BadState_Instruction: "You can say tell me a story to hear a story or publish to write your own. " +
         "Which would you like to do?",
@@ -77,8 +84,25 @@ var script = (function () {
     return {
         /*
          * Gets a piece of script. Returns the script if it is there, or "" if it is not.
+         * The verbosityLevel is a number, representing the number of times a user has heard the specific scriptKey,
+         * which is used to reduce the verbosity of a key as the user hears it more. This way, the  script controls
+         * at which point each script element transitions from one verbosity level to the next.
          */
         getScript: function (scriptKey, scriptPiece, verbosityLevel) {
+            // If this scriptKey has a verbosity, we have to check that first.
+            var noviceScriptKey = scriptKey+"_NOVICE_"+scriptPiece;
+            if (scriptKey+"_VerbosityKey" in script) {
+                if (verbosityLevel <= script[scriptKey+"_VerbosityKey"].NOVICE &&
+                    scriptKey+"_NOVICE_"+scriptPiece in script) {
+                    scriptKey += "_NOVICE";
+                } else if (verbosityLevel <= script[scriptKey+"_VerbosityKey"].MEDIUM &&
+                    scriptKey+"_MEDIUM_"+scriptPiece in script) {
+                    scriptKey += "_MEDIUM";
+                } else if (scriptKey+"_EXPERT_"+scriptPiece in script) {
+                    scriptKey += "_EXPERT";
+                }
+            }
+
             // If we don't have that key, return an empty string.
             if (!(scriptKey+"_"+scriptPiece in script)) {
                 return "";
