@@ -14,7 +14,7 @@
       "recentStoryIndex": "2864420412082015",
       "storyTime": "930348493049",
       "timeStamp": "2864420412082015",
-      "storyState": "JustHeardAStory"
+      "storyState": "JustCreatedAStory"
     }
   },
   "request": {
@@ -26,7 +26,7 @@
       "slots": {
         "Story": {
           "name": "Story",
-          "value": "this question mark is this exclamation point weird nope dude"
+          "value": "banana banana banana banana banana b"
         },
         "Reaction": {
           "name": "Reaction",

@@ -62,6 +62,12 @@ var script = (function () {
             "Coolio! You're published." ],
         YesIntent_Instruction: "What would you like to do next? You can publish another story or say tell me a story.",
 
+        YesIntentAllBananaStory_Reaction: "Oh. My. That story was righteous. Gnarly. Most certainly off of any sort ",
+        YesIntentAllBananaStory_Instruction: "Of chain. It will be praised through out the ages. You, " +
+        "my good friend, are a genius, a scholar, a writer unrivaled in creativity and style. You are without " +
+        "question a fancy cat. I am proud to say that you are now a member of. Wait for it. The. Banana. Bandits. " +
+        "Congratulations, I bow down to you. What ever could I do to serve one as great as yourself?",
+
         NoIntent_Reaction: [
             "Oops, sorry about that. Let's try again.",
             "Rats. Give me another shot.",

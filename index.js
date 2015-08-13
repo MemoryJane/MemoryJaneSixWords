@@ -159,6 +159,11 @@ var sixWords = (function () {
                 var userStoryArray = userStory.split(" ");
                 var userStoryWordCount = userStoryArray.length;
 
+                //Check if the user entered a banana story
+                if (userStory == "banana banana banana banana banana banana"){
+                    session.attributes.allBananaStory = true;
+                }
+
                 // Let's see if the user included any punctuation.
                 var userStoryArrayWithoutPunctuation = punctuationFixer(userStoryArray.splice(0));
                 var userStoryArrayWithoutPunctuationCount = userStoryArrayWithoutPunctuation.length;
@@ -202,8 +207,11 @@ var sixWords = (function () {
                         session.attributes.storyState = "ThinkingAboutCreating";
                         data.putUserActivity(session.user.userId, timeStamp, "Create", function callback() { });
 
-                        // And ask them to write or listen to another one.
-                        alexaSpeak("YesIntent", null, session, context, false);
+                        if (!session.attributes.allBananaStory){
+                            alexaSpeak("YesIntent", null, session, context, false);
+                        }else{
+                            alexaSpeak("YesIntentAllBananaStory", null, session, context, false);
+                        }
                     }
                 });
             }
