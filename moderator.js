@@ -72,7 +72,7 @@ function askToRemove(storyData, preamble) {
         };
         dynamodb.updateItem(updateItemParams, function(updateError, updateData) {
             if (isApproved) {
-                var addAReaction = nextPreamble+"\nIf you want to add a reaction, type it now, or hit enter to not react.";
+                var addAReaction = nextPreamble+"\nIf you want to add a reaction, type it now, or hit enter to not react.  ";
                 rl.question(addAReaction, function(reaction) {
                     if (reaction != "") {
                         var newReactionParams = { TableName: 'MemoryJaneSixWordReactions',
