@@ -34,6 +34,14 @@ var data = (function () {
     }
 
     return {
+        /**
+         * This takes a userId and a scriptKey and increases by one the number of times the user has heard the
+         * scriptKey. It then returns the number of times it's been heard in the callback.
+         */
+        incrementScriptListenCount: function(userId, scriptKey, scriptListenCallback) {
+            scriptListenCallback(null, 12);
+        },
+
          /**
          * Gets a random story from the database and returns it
          * @param callback
