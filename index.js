@@ -53,10 +53,12 @@ var sixWords = (function () {
     var intentHandlers = {
         ListenIntent: function (intent, session, context) {
             // Get a story from data.
-            data.getRandomStory(function (nextStory, timeStamp) {
+            data.getRandomStory(function (nextStory, timeStamp, author) {
                 // Save the story index to make sure we know which story was read.
                 session.attributes.recentStoryIndex = timeStamp;
                 session.attributes.storyState = "JustHeardAStory";
+                session.attributes.Author = author;
+                session.attributes.nextStory = nextStory;
                 data.putUserActivity(session.user.userId, timeStamp, "Listen", function callback() { });
 
                 // Read the story, Alexa, ask if they want to up vote it.
@@ -102,13 +104,17 @@ var sixWords = (function () {
                                 if (addReactionError) {
                                     console.log("SixWords _upVoteIntent addReaction  ERROR " + addReactionError);
                                 } else {
-                                    alexaSpeak("UpVoteIntentAndBlank", reactionResponse, session, context, false);
+                                    data.addNews(session.attributes.Author, "You received the comment. " + reaction + ". On your story. " + session.attributes.nextStory, function(addNewsError){
+                                        alexaSpeak("UpVoteIntentAndBlank", reactionResponse, session, context, false);
+                                    });
                                 }
                             });
                         } else {
                             // No reaction? No problem, just send the up vote response. Have to include the insert
                             // text because this script key has an insert.
-                            alexaSpeak("UpVoteIntentAndBlank", " ", session, context, false);
+                            data.addNews(session.attributes.Author, "You received a plus one on your story. " + session.attributes.nextStory, function(addNewsError){
+                                alexaSpeak("UpVoteIntentAndBlank", " ", session, context, false);
+                            });
                         }
                     }
                 });

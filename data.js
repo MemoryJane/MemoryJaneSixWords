@@ -48,9 +48,10 @@ var data = (function () {
                     var randomStoryIndex = (Math.floor(Math.random() * storyCount));
                     var story = tableStoryData.Items[randomStoryIndex].Story.S;
                     var timeStamp = tableStoryData.Items[randomStoryIndex].TimeStamp.N.toString();
+                    var author = tableStoryData.Items[randomStoryIndex].Author.S;
 
                     console.log("Data _gettingStory_ " + story);
-                    callback(story, timeStamp);
+                    callback(story, timeStamp, author);
                 }
             });
         },
@@ -215,7 +216,6 @@ var data = (function () {
                 if (!newsQueryData.Items[0]){
                     callback(undefined);
                 } else {
-                    console.log("into else");
                     console.log(newsQueryData);
                     callback(newsQueryData.Items[0].News.S);
                 }
@@ -228,13 +228,14 @@ var data = (function () {
                     userId: {"S": userId},
                     TimeStamp: { "N": getTimeStamp().toString() },
                     News: {"S": news},
-                    Read: {"B": false}
+                    Read: {"S": "false"}
                 }
             };
-
+            console.log("IN ADD NEWS");
             dynamodb.putItem(newNewsParams, function (reactionErr, reactionData) {
                 if (reactionErr) callback(reactionErr);
-                else callback();
+                else console.log("ADDED NEWS");
+                callback(reactionErr);
             });
         }
     }
