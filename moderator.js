@@ -34,6 +34,7 @@ function askToRemove(storyData, preamble) {
             askToRemove(storyData, nextPreamble);
         }
 
+        // Setup for the approval or rejection.
         var isApproved = true;
         nextPreamble = "Story is APPROVED.";
         if (approveOrReject.toLowerCase() == "r") {
@@ -41,6 +42,7 @@ function askToRemove(storyData, preamble) {
             nextPreamble = "Story is REJECTED.";
         }
 
+        // Set the approved attribute and then call this function again.
         var scriptKey = storyData.Items[0].TimeStamp.N.toString();
         var updateItemParams = {
             TableName : "MemoryJaneSixWordStories",
@@ -49,7 +51,6 @@ function askToRemove(storyData, preamble) {
             ExpressionAttributeNames : { "#approved" : "Approved" },
             ExpressionAttributeValues : { ":isTrue" : {"BOOL":isApproved} }
         };
-
         dynamodb.updateItem(updateItemParams, function(updateError, updateData) {
             // First item taken care of, remove it and send the array back in.
             storyData.Items.splice(0, 1);
