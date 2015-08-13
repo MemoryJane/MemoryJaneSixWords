@@ -203,7 +203,8 @@ var data = (function () {
                     var count = storyReactionData.Count;
                     if (count == 0) {
                         callback(undefined);
-                    } else{
+                    }
+                    else{
                         var reactions = [];
                         for (i = 0; i < count; i++) {
                             reactions[i] = storyReactionData.Items[i].Reaction.S;
@@ -261,8 +262,21 @@ var data = (function () {
                 if (!newsQueryData.Items[0]){
                     callback(undefined);
                 } else {
-                    console.log(newsQueryData);
-                    callback(newsQueryData.Items[0].News.S);
+                    if (newsQueryData.Items[0].Read.S == true){
+                        callback(undefined);
+                    }else {
+                        var updateItemParams = {
+                            TableName : "MemoryJaneSixWordNews",
+                            Key : { userId : { "S" : user } },
+                            UpdateExpression : "SET #approved = :isTrue",
+                            ExpressionAttributeNames : { "#approved" : "Read" },
+                            ExpressionAttributeValues : { ":isTrue" : {"BOOL":true} }
+                        };
+                        dynamodb.updateItem(updateItemParams, function(newsQueryErr, newsQueryData){
+                            console.log(newsQueryData);
+                            callback(newsQueryData.Items[0].News.S);
+                        });
+                    }
                 }
             });
         },
