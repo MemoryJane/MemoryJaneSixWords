@@ -24,7 +24,15 @@ var readline = require('readline'),
 function askToRemove(storyData, preamble) {
     if (storyData.Items.length == 0) process.exit(0);
 
-    var q = preamble+"\n\n"+storyData.Items[0].Story.S+"\n Enter to approve or \"R\" to reject?";
+    // If this is not one of our stories, call it out.
+    var q = preamble+"\n\n";
+    var isUs = true;
+    if (storyData.Items[0].Author.S != "amzn1.account.AFM2SDUDN23KH6MJHROQVWCIW3IA") {
+        isUs = false;
+        q += "***  NOT ONE OF OURS ***\n";
+    }
+    q += storyData.Items[0].Story.S+"\n Enter to approve or \"R\" to reject?";
+
     rl.question(q, function(approveOrReject) {
         // Did they want to accept or reject.
         var nextPreamble = "Sorry, didn't understand that. Doing nothing to that story.";
@@ -52,9 +60,28 @@ function askToRemove(storyData, preamble) {
             ExpressionAttributeValues : { ":isTrue" : {"BOOL":isApproved} }
         };
         dynamodb.updateItem(updateItemParams, function(updateError, updateData) {
-            // First item taken care of, remove it and send the array back in.
-            storyData.Items.splice(0, 1);
-            askToRemove(storyData, nextPreamble);
+            if (isApproved) {
+                var addAReaction = nextPreamble+"\nIf you want to add a reaction, type it now, or hit enter to not react.";
+                rl.question(addAReaction, function(reaction) {
+                    if (reaction != "") {
+                        var storyId = storyData.Items[0].TimeStamp.N;
+                        var userId = "amzn1.account.AFM2SDUDN23KH6MJHROQVWCIW3IA";
+                        data.addStoryReaction(reaction, storyId, userId, function(addReactionError) {
+                            nextPreamble = "Saved your reaction.";
+                            storyData.Items.splice(0, 1);
+                            askToRemove(storyData, nextPreamble);
+                        });
+                    } else {
+                        nextPreamble = "No reaction saved.";
+                        storyData.Items.splice(0, 1);
+                        askToRemove(storyData, nextPreamble);
+                    }
+               });
+            } else {
+                // First item taken care of, remove it and send the array back in.
+                storyData.Items.splice(0, 1);
+                askToRemove(storyData, nextPreamble);
+            }
         });
     });
 }
