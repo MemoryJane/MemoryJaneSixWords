@@ -92,6 +92,86 @@ var data = (function () {
                 }
             });
         },
+
+        /**
+         * Gets "n" stories from a particular author
+         * @param numStories
+         * @param author
+         * @param authorStoriesCallback
+         */
+        getStoriesByAuthor: function (numStories, author, authorStoriesCallback){
+            // Get all of the data from the MemoryJaneSixWordStories Table
+            var tableParams = { TableName: "MemoryJaneSixWordStories",
+                FilterExpression : "#thisauthor = :author AND #approved = :is_true",
+                ExpressionAttributeNames : { "#thisauthor" : "Author" , "#approved" : "Approved"},
+                ExpressionAttributeValues : { ":author" : {"S": author} , ":is_true" : {"BOOL": true}}
+            };
+            dynamodb.scan(tableParams, function (tableStoryErr, tableStoryData) {
+                if (tableStoryErr) console.log("Data _getStoriesByAuthor_  ERROR " + tableStoryErr);
+                else {
+                    var count = tableStoryData.Count;
+                    var authorStoryIndexes = [];
+                    var stories = [];
+                    var timeStamps = [];
+                    var authors = [];
+
+                    for (i = 0; i < numStories; i++){
+                        authorStoryIndexes[i] = (Math.floor(Math.random() *count));
+                        for (j = 0; j < i; j++){
+                            if (authorStoryIndexes[i] == authorStoryIndexes[j]){
+                                i--;
+                            }
+                        }
+                    }
+                    for (i = 0; i < numStories; i++) {
+                        stories[i] = tableStoryData.Items[authorStoryIndexes[i]].Story.S;
+                        timeStamps[i] = tableStoryData.Items[authorStoryIndexes[i]].TimeStamp.N.toString();
+                        authors[i] = tableStoryData.Items[authorStoryIndexes[i]].Author.S;
+                    }
+                    authorStoriesCallback(stories, timeStamps, authors);
+                }
+            });
+        },
+
+        /**
+         * Gets "n" stories from the database and returns them
+         * @param numStories
+         * @param randomStoriesCallback
+         */
+        getRandomStories: function (numStories, randomStoriesCallback){
+            // Get all of the data from the MemoryJaneSixWordStories Table
+            var tableParams = { TableName: "MemoryJaneSixWordStories",
+                FilterExpression : "#approved = :isTrue",
+                ExpressionAttributeNames : { "#approved" : "Approved" },
+                ExpressionAttributeValues : { ":isTrue" : {"BOOL":true} }
+            };
+            dynamodb.scan(tableParams, function (tableStoryErr, tableStoryData) {
+                if (tableStoryErr) console.log("Data _getRandomStory_  ERROR " + tableStoryErr);
+                else {
+                    var count = tableStoryData.Count;
+                    var randomStoryIndexes = [];
+                    var stories = [];
+                    var timeStamps = [];
+                    var authors = [];
+
+                    for (i = 0; i < numStories; i++){
+                        randomStoryIndexes[i] = (Math.floor(Math.random() *count));
+                        for (j = 0; j < i; j++){
+                            if (randomStoryIndexes[i] == randomStoryIndexes[j]){
+                                i--;
+                            }
+                        }
+                    }
+                    for (i = 0; i < numStories; i++) {
+                        stories[i] = tableStoryData.Items[randomStoryIndexes[i]].Story.S;
+                        timeStamps[i] = tableStoryData.Items[randomStoryIndexes[i]].TimeStamp.N.toString();
+                        authors[i] = tableStoryData.Items[randomStoryIndexes[i]].Author.S;
+                    }
+                    randomStoriesCallback(stories, timeStamps, authors);
+                }
+            });
+        },
+
         /**
          * Puts a user created story into the database
          * @param author

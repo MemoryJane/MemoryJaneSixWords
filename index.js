@@ -291,7 +291,7 @@ var sixWords = (function () {
         QuitIntent: function(intent, session, context) {
             // All done. Goodnight!
             alexaSpeak("QuitIntent", null, session, context, true);
-        }
+        },
     };
 
     /*
