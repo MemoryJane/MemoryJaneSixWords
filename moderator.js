@@ -45,7 +45,9 @@ function askToRemove(storyData, preamble) {
         var updateItemParams = {
             TableName : "MemoryJaneSixWordStories",
             Key : { TimeStamp : { "N" : scriptKey } },
-            UpdateExpression : "attribute_not_exists(Approved)"
+            UpdateExpression : "SET #approved = :isTrue",
+            ExpressionAttributeNames : { "#approved" : "Approved" },
+            ExpressionAttributeValues : { ":isTrue" : {"BOOL":isApproved} }
         };
 
         dynamodb.updateItem(updateItemParams, function(updateError, updateData) {
@@ -58,9 +60,7 @@ function askToRemove(storyData, preamble) {
 
 // Get all the stories from the DB that are not approved.
 var tableParams = { TableName: "MemoryJaneSixWordStories",
-    FilterExpression : "#approved <> :isTrue",
-    ExpressionAttributeNames : { "#approved" : "Approved" },
-    ExpressionAttributeValues : { ":isTrue" : {"BOOL":true} }
+    FilterExpression : "attribute_not_exists(Approved)"
 };
 dynamodb.scan(tableParams, function (tableStoryErr, tableStoryData) {
     if (tableStoryErr) console.log("_tableScan  ERROR " + tableStoryErr);
