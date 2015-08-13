@@ -18,15 +18,15 @@
     }
   },
   "request": {
-    "type": "LaunchRequest",
-    "requestId": "ListenIntent",
+    "type": "IntentRequest",
+    "requestId": "CreateIntent",
     "timestamp": "2015-05-13T12:34:56Z",
     "intent": {
-      "name": "ListenIntent",
+      "name": "CreateIntent",
       "slots": {
         "Story": {
           "name": "Story",
-          "value": "this comma is comma the comma best comma story comma ever comma"
+          "value": "this question mark is this exclamation point weird nope dude"
         },
         "Reaction": {
           "name": "Reaction",

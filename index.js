@@ -310,7 +310,7 @@ var sixWords = (function () {
             }
             if(i < storyArray.length &&
                 (storyArray[i].toLowerCase() == "exclamation" && storyArray[i+1].toLowerCase() == "point") ||
-                (storyArray[i].toLowerCase() == "question" && storyArray[i].toLowerCase() == "mark")) {
+                (storyArray[i].toLowerCase() == "question" && storyArray[i+1].toLowerCase() == "mark")) {
                 if (i != 0) {
                     // This is not the first item, so append the punctuation to the previous word.
                     var exclamationPunctuation = "!";
