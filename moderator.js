@@ -21,6 +21,17 @@ if (process.env.MEMJANE_USE_LOCAL_DB && process.env.MEMJANE_USE_LOCAL_DB == "tru
 var readline = require('readline'),
     rl = readline.createInterface(process.stdin, process.stdout);
 
+function getTimeStamp (){
+    var rightNow = new Date();
+    return timeStamp = Number(rightNow.getUTCMilliseconds()+1)
+        +((rightNow.getUTCSeconds()+1)*10000)
+        +((rightNow.getUTCMinutes()+1)*1000000)
+        +((rightNow.getUTCHours()+1)*100000000)
+        +(rightNow.getUTCDate()*10000000000)
+        +((rightNow.getUTCMonth()+1)*1000000000000)
+        +(rightNow.getUTCFullYear()*10000000000000);
+}
+
 function askToRemove(storyData, preamble) {
     if (storyData.Items.length == 0) process.exit(0);
 
@@ -64,12 +75,34 @@ function askToRemove(storyData, preamble) {
                 var addAReaction = nextPreamble+"\nIf you want to add a reaction, type it now, or hit enter to not react.";
                 rl.question(addAReaction, function(reaction) {
                     if (reaction != "") {
-                        var storyId = storyData.Items[0].TimeStamp.N;
-                        var userId = "amzn1.account.AFM2SDUDN23KH6MJHROQVWCIW3IA";
-                        data.addStoryReaction(reaction, storyId, userId, function(addReactionError) {
-                            nextPreamble = "Saved your reaction.";
-                            storyData.Items.splice(0, 1);
-                            askToRemove(storyData, nextPreamble);
+                        var newReactionParams = { TableName: 'MemoryJaneSixWordReactions',
+                            Item: {
+                                storyId: {"N": storyData.Items[0].TimeStamp.N.toString()},
+                                TimeStamp: { "N": getTimeStamp().toString() },
+                                ReactorId: {"S": "amzn1.account.AFM2SDUDN23KH6MJHROQVWCIW3IA"},
+                                Reaction: {"S": reaction}
+                            }
+                        };
+
+                        dynamodb.putItem(newReactionParams, function (reactionErr, reactionData) {
+                            if (reactionErr) console.log("Data _addStoryReaction_  ERROR " + reactionErr);
+
+                            // Put the item in the news table too, so they get notified.
+                            var news = "You received a comment. "+reaction+". On your story.";
+                            news += " "+storyData.Items[0].Story.S;
+                            var newNewsParams = { TableName: 'MemoryJaneSixWordNews',
+                                Item: {
+                                    userId: {"S": storyData.Items[0].Author.S},
+                                    TimeStamp: { "N": getTimeStamp().toString() },
+                                    News: {"S": news},
+                                    Read: {"S": "false"}
+                                }
+                            };
+                            dynamodb.putItem(newNewsParams, function (reactionErr, reactionData) {
+                                nextPreamble = "Saved your reaction.";
+                                storyData.Items.splice(0, 1);
+                                askToRemove(storyData, nextPreamble);
+                            });
                         });
                     } else {
                         nextPreamble = "No reaction saved.";
