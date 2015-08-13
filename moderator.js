@@ -28,7 +28,7 @@ function askToRemove(storyData, preamble) {
     rl.question(q, function(approveOrReject) {
         // Did they want to accept or reject.
         var nextPreamble = "Sorry, didn't understand that. Doing nothing to that story.";
-        if (approveOrReject.toLowerCase() != "r" && approveOrReject == "" && approveOrReject.toLowerCase() == "a") {
+        if (approveOrReject.toLowerCase() != "r" && approveOrReject != "" && approveOrReject.toLowerCase() != "a") {
             // Do nothing.
             storyData.Items.splice(0, 1);
             askToRemove(storyData, nextPreamble);
