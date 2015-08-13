@@ -75,6 +75,14 @@ var script = (function () {
             "I just want to make sure I heard that right. Did you say %1?",
             "Just to confirm, did you say %1?"],
 
+        CreateIntentGoodStoryWithThemeAndBlank_Reaction: [
+            "Nice! You matched our theme for the day. Good job!",
+            "Very cool! You even matched our theme for the day. Well done."],
+        CreateIntentGoodStoryWithThemeAndBlank_Instruction: [
+            "I just want to confirm I heard it right. Did you say %1?",
+            "I just want to make sure I heard that right. Did you say %1?",
+            "Just to confirm, did you say %1?"],
+
         YesIntent_VerbosityKey: { "NOVICE": 5, "MEDIUM": 20 },
         YesIntent_Reaction: [
             "Coolio! Your story is saved. I can't wait for other people to hear it.",

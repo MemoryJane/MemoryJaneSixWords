@@ -208,8 +208,16 @@ var sixWords = (function () {
                     session.attributes.storyState = "JustCreatedAStory";
                     session.attributes.userStory = userStory;
 
-                    // And repeat it back to them to confirm that we heard them correctly.
-                    alexaSpeak("CreateIntentGoodStoryAndBlank", userStory, session, context, false);
+                    // Did the story match today's theme?
+                    data.doesStoryMatchTheme(userStory, function (doesStoryMatchTheme) {
+                        if (doesStoryMatchTheme) {
+                            // They matched the theme - encourage that behaviour!
+                            alexaSpeak("CreateIntentGoodStoryWithThemeAndBlank", userStory, session, context, false);
+                        } else {
+                            // No theme, just repeat the story back to them to confirm that we heard it correctly.
+                            alexaSpeak("CreateIntentGoodStoryAndBlank", userStory, session, context, false);
+                        }
+                    });
                 }
             }
         },

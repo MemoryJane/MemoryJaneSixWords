@@ -25,6 +25,7 @@
     "intent": {
       "name": "CreateIntent",
       "slots": {
+        "Story": { "value": "banana top banana bottom banana football" }
       }
     }
   }

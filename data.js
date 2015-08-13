@@ -412,6 +412,13 @@ var data = (function () {
             var themeAuthors = ["Aaron_LOCAL", "Aaron_LOCAL", "Aaron_LOCAL"];
 
             getThemeStoriesCallback(themeStories, themeStoryIds, themeAuthors);
+        },
+
+        /**
+         *
+         */
+        doesStoryMatchTheme: function(story, getThemeStoriesCallback) {
+            getThemeStoriesCallback(true);
         }
     }
 }) ();
