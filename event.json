@@ -14,25 +14,17 @@
       "recentStoryIndex": "2864420412082015",
       "storyTime": "930348493049",
       "timeStamp": "2864420412082015",
-      "storyState": "JustCreatedAStory",
+      "storyState": "JustAskedHearThemeStories",
       "userId": "amzn1.account.AFM2SDUDN23KH6MJHROQVWCIW3IA"
     }
   },
   "request": {
-    "type": "LaunchRequest",
-    "requestId": "ListenIntent",
+    "type": "IntentRequest",
+    "requestId": "CreateIntent",
     "timestamp": "2015-05-13T12:34:56Z",
     "intent": {
-      "name": "ListenIntent",
+      "name": "CreateIntent",
       "slots": {
-        "Story": {
-          "name": "Story",
-          "value": "banana banana banana banana banana b"
-        },
-        "Reaction": {
-          "name": "Reaction",
-          "value": "dag"
-        }
       }
     }
   }

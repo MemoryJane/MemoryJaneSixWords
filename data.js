@@ -302,6 +302,36 @@ var data = (function () {
                 else console.log("ADDED NEWS");
                 callback(reactionErr);
             });
+        },
+
+        /**
+         * Call this to see if there are theme stories for this user to hear.
+         * Returns a boolean if there are, and a string that is the theme of the day.
+         * This function only returns true once per day, to ensure users don't get overwhelmed with
+         * requests to hear the theme stories.
+         */
+        areThereThemeStoriesToHear: function(userId, areThereThemeStoriesCallback) {
+            areThereThemeStoriesCallback(true, "starts with the word banana");
+        },
+
+        /**
+         * Call this to see if there is a theme for the day. If there is, you'll get back true and the theme.
+         * This function only returns true once per day, to ensure users don't get overwhelmed with
+         * requests to create a theme story.
+         */
+        isThereAThemeToPromptFor: function(userId, isThereAThemeCallback) {
+            isThereAThemeCallback(true, "starts with the word banana");
+        },
+
+        /**
+         *
+         */
+        getThemeStories: function(getThemeStoriesCallback) {
+            var themeStories = ["banana 2 3 4 5 6", "banana is the coolest thing ever", "banana plays trombone in the band"];
+            var themeStoryIds = ["1", "2", "3"];
+            var themeAuthors = ["Aaron_LOCAL", "Aaron_LOCAL", "Aaron_LOCAL"];
+
+            getThemeStoriesCallback(themeStories, themeStoryIds, themeAuthors);
         }
     }
 }) ();

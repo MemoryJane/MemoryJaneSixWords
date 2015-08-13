@@ -8,6 +8,10 @@ var script = (function () {
         LaunchRequest_Reaction: "Welcome to Six Word Stories.",
         LaunchRequest_Instruction: "You can say tell me a story to hear an awesome little six-word story.",
 
+        LaunchRequestThemePrompt_Reaction: "Welcome to Six Word Stories.",
+        LaunchRequestThemePrompt_Instruction: "We have a theme to our stories today. We're encouraging fans to " +
+        "publish a story that %1. Would you like to hear a few of these stories?",
+
         GivenNews_Reaction: "Welcome back! You have news.",
         GivenNews_Instruction: "Would you like to hear your news?",
         GivingNews_Reaction: "%1.",
@@ -49,9 +53,17 @@ var script = (function () {
             "Great, let's make a story.",
             "I love creating new stories, let's do it!",
             "Oooh, can't wait to hear your story." ],
-        CreateIntentNoStory_Instruction: ["Say publish followed by any six words.",
-        "Just say publish followed by six words",
-        "Say publish then any six words"],
+        CreateIntentNoStory_Instruction: [
+            "Say publish followed by any six words.",
+            "Just say publish followed by six words",
+            "Say publish then any six words"],
+
+        CreateIntentThemePrompt_Reaction: [
+            "Oooh, good news. We have a theme today. You should make a theme story!",
+            "We have a theme today! Help us make more theme stories.",
+            "It's a theme story day."],
+        CreateIntentThemePrompt_Instruction: "Say publish followed by any six words. And if you want to follow the" +
+        "theme, make sure your story %1.",
 
         CreateIntentBadStoryAndBlank_Reaction: [ "Oops.", "Shoot.", "Whoops.", "Darn" ],
         CreateIntentBadStoryAndBlank_Instruction: "I heard you try to publish the following story: %1. " +
@@ -73,11 +85,19 @@ var script = (function () {
         YesIntent_MEDIUM_Instruction: "What would you like to do next? You can publish another story or say tell me a story.",
         YesIntent_EXPERT_Instruction: "What do you want to do next?",
 
-        YesIntentAllBananaStory_Reaction: "Oh. My. That story was righteous. Gnarly. Most certainly off of any sort ",
-        YesIntentAllBananaStory_Instruction: "Of chain. It will be praised through out the ages. You, " +
+        YesIntentHearThemeStories_VerbosityKey: { "NOVICE": 5, "MEDIUM": 20 },
+        YesIntentHearThemeStories_Reaction: "Excellent, here's some theme stories for you. . %1",
+        YesIntentHearThemeStories_NOVICE_Instruction: "What would you like to do next? You can say publish to publish a story " +
+        "or say tell me a story to hear a story.",
+        YesIntentHearThemeStories_MEDIUM_Instruction: "What would you like to do next? You can publish another story or say tell me a story.",
+        YesIntentHearThemeStories_EXPERT_Instruction: "What do you want to do next?",
+
+        YesIntentAllBananaStory_Reaction: "Oh. My. That story was righteous. Gnarly. Most certainly off of any sort "+
+        "of chain. It will be praised through out the ages. You, " +
         "my good friend, are a genius, a scholar, a writer unrivaled in creativity and style. You are without " +
         "question a fancy cat. I am proud to say that you are now a member of. Wait for it. The. Notorious. Banana. " +
         "Bandits. Congratulations, I bow down to you. What ever could I do to serve one as great as yourself?",
+        YesIntentAllBananaStory_Instruction: "Would you like to create another story?",
 
         NoIntent_Reaction: [
             "Oops, sorry about that. Let's try again.",
@@ -85,6 +105,18 @@ var script = (function () {
             "Dang. Sorry, I must have misunderstood you. Let me try again.",
             "My bad, I must have misheard you. Let me try again."],
         NoIntent_Instruction: "Say publish followed by any six words.",
+        NoIntentNews_Reaction: [
+            "No problem.",
+            "I agree, who needs news?",
+            "Okay, no news for you."],
+        NoIntentNews_Instruction: "You can say tell me a story to hear a story or publish to write your own. " +
+        "Which would you like to do?",
+        NoIntentHearThemeStories_Reaction: [
+            "Bummer, that's a cool theme bro.",
+            "Okay, no problem, check back tomorrow. Maybe you'll like that theme better.",
+            "Alright, no theme stories."],
+        NoIntentHearThemeStories_Instruction: "You can say tell me a story to hear a story or publish to write your own. " +
+        "Which would you like to do?",
 
         HelpIntentCreating_Instruction: "To create a story, say publish followed by any six words.",
         HelpIntentCreatedAndBlank_Instruction: "You just published the story %1. Did I hear you correctly",
