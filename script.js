@@ -47,31 +47,41 @@ var script = (function () {
             "Great, let's make a story.",
             "I love creating new stories, let's do it!",
             "Oooh, can't wait to hear your story." ],
-        CreateIntentNoStory_Instruction: "Say publish followed by any six words.",
+        CreateIntentNoStory_Instruction: ["Say publish followed by any six words.",
+        "Just say publish followed by six words",
+        "Say publish then any six words"],
 
-        CreateIntentBadStoryAndBlank_Reaction: [ "Oops.", "Shoot.", "Whoops." ],
+        CreateIntentBadStoryAndBlank_Reaction: [ "Oops.", "Shoot.", "Whoops.", "Darn" ],
         CreateIntentBadStoryAndBlank_Instruction: "I heard you try to publish the following story: %1. " +
         "But our stories require exactly 6 words. Try again. Say publish followed by your six words.",
 
-        CreateIntentGoodStoryAndBlank_Reaction: [ "Cool!", "Sweet!", "Bingo!" ],
-        CreateIntentGoodStoryAndBlank_Instruction: "I just want to confirm I heard it right. Did you say %1?",
+        CreateIntentGoodStoryAndBlank_Reaction: [ "Cool!", "Sweet!", "Bingo!", "Great story!" ],
+        CreateIntentGoodStoryAndBlank_Instruction:[
+            "I just want to confirm I heard it right. Did you say %1?",
+            "I just want to make sure I heard that right. Did you say %1?",
+            "Just to confirm, did you say %1?"],
 
+        YesIntent_VerbosityKey: { "NOVICE": 5, "MEDIUM": 20 },
         YesIntent_Reaction: [
             "Coolio! Your story is saved. I can't wait for other people to hear it.",
             "Coolio! I got your story and I'll share it with other users.",
             "Coolio! You're published." ],
-        YesIntent_Instruction: "What would you like to do next? You can publish another story or say tell me a story.",
+        YesIntent_NOVICE_Instruction: "What would you like to do next? You can say publish to publish a story " +
+        "or say tell me a story to hear a story.",
+        YesIntent_MEDIUM_Instruction: "What would you like to do next? You can publish another story or say tell me a story.",
+        YesIntent_EXPERT_Instruction: "What do you want to do next?",
 
         YesIntentAllBananaStory_Reaction: "Oh. My. That story was righteous. Gnarly. Most certainly off of any sort ",
         YesIntentAllBananaStory_Instruction: "Of chain. It will be praised through out the ages. You, " +
         "my good friend, are a genius, a scholar, a writer unrivaled in creativity and style. You are without " +
-        "question a fancy cat. I am proud to say that you are now a member of. Wait for it. The. Banana. Bandits. " +
-        "Congratulations, I bow down to you. What ever could I do to serve one as great as yourself?",
+        "question a fancy cat. I am proud to say that you are now a member of. Wait for it. The. Notorious. Banana. " +
+        "Bandits. Congratulations, I bow down to you. What ever could I do to serve one as great as yourself?",
 
         NoIntent_Reaction: [
             "Oops, sorry about that. Let's try again.",
             "Rats. Give me another shot.",
-            "Dang. Sorry, I must have misunderstood you. Let me try again." ],
+            "Dang. Sorry, I must have misunderstood you. Let me try again.",
+            "My bad, I must have misheard you. Let me try again."],
         NoIntent_Instruction: "Say publish followed by any six words.",
 
         HelpIntentCreating_Instruction: "To create a story, say publish followed by any six words.",
@@ -81,7 +91,12 @@ var script = (function () {
         HelpIntent_Instruction: "You can say tell me a story to hear an awesome six word story " +
         "or say publish to write your own. What would you like to do?",
 
-        QuitIntent_Instruction: [ "Goodbye.", "Okay, come back soon!", "Ciao!" ],
+        QuitIntent_Instruction: [
+            "Goodbye.",
+            "Okay, come back soon!",
+            "Ciao!",
+            "See you later alligator!",
+            "Smell you later!" ],
 
         Reprompt_Reaction: "Sorry, I didn't understand."
     };
