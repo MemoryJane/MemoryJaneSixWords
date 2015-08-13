@@ -39,7 +39,24 @@ var data = (function () {
          * scriptKey. It then returns the number of times it's been heard in the callback.
          */
         incrementScriptListenCount: function(userId, scriptKey, scriptListenCallback) {
-            scriptListenCallback(null, 12);
+            var updateItemParams = {
+                TableName : "MemoryJaneSixWordScriptListens",
+                Key : { UserID : { "S" : userId }, ScriptKey : { "S" : scriptKey } },
+                UpdateExpression : "ADD #listenCount :increment",
+                ExpressionAttributeNames : { "#listenCount" : "ListenCount" },
+                ExpressionAttributeValues : { ":increment" : {"N":"1"} }
+            };
+
+            dynamodb.updateItem(updateItemParams, function(updateError, updateData) {
+                // Okay, now get the listen count to send back.
+                var getListenCountParams = { TableName: 'MemoryJaneSixWordScriptListens',
+                    Key : { UserID : { "S" : userId }, ScriptKey : { "S" : scriptKey } }
+                };
+
+                dynamodb.getItem(getListenCountParams, function(listenError, listenData) {
+                    scriptListenCallback(listenError, listenData.ListenCount);
+                });
+            });
         },
 
          /**

@@ -90,7 +90,6 @@ var script = (function () {
          */
         getScript: function (scriptKey, scriptPiece, verbosityLevel) {
             // If this scriptKey has a verbosity, we have to check that first.
-            var noviceScriptKey = scriptKey+"_NOVICE_"+scriptPiece;
             if (scriptKey+"_VerbosityKey" in script) {
                 if (verbosityLevel <= script[scriptKey+"_VerbosityKey"].NOVICE &&
                     scriptKey+"_NOVICE_"+scriptPiece in script) {

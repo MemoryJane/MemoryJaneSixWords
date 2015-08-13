@@ -296,20 +296,30 @@ var sixWords = (function () {
      */
     function punctuationFixer (storyArray) {
         for (i = 0; i < storyArray.length; i++) {
-            if (storyArray[i].toLowerCase() == "period" || storyArray[i].toLowerCase() == "comma" ||
-                storyArray[i].toLowerCase() == "exclamation" ||
-                storyArray[i].toLowerCase() == "question") {
+            if (storyArray[i].toLowerCase() == "period" || storyArray[i].toLowerCase() == "comma") {
                 if (i != 0) {
                     // This is not the first item, so append the punctuation to the previous word.
                     var punctuation = ".";
                     if (storyArray[i].toLowerCase() == "comma") punctuation = ",";
-                    else if (storyArray[i].toLowerCase()  == "exclamation") punctuation = "!";
-                    else if (storyArray[i].toLowerCase()  == "question") punctuation = "?";
                     storyArray[i-1] = storyArray[i-1].concat(punctuation);
                 }
 
                 // Remove the punctuation from the array. and stay on the current word.
                 storyArray.splice(i, 1);
+                i--;
+            }
+            if(i < storyArray.length &&
+                (storyArray[i].toLowerCase() == "exclamation" && storyArray[i+1].toLowerCase() == "point") ||
+                (storyArray[i].toLowerCase() == "question" && storyArray[i].toLowerCase() == "mark")) {
+                if (i != 0) {
+                    // This is not the first item, so append the punctuation to the previous word.
+                    var exclamationPunctuation = "!";
+                    if (storyArray[i].toLowerCase() == "question") exclamationPunctuation = "?";
+                    storyArray[i-1] = storyArray[i-1].concat(exclamationPunctuation);
+                }
+
+                // Remove the punctuation from the array. and stay on the current word.
+                storyArray.splice(i, 2);
                 i--;
             }
         }

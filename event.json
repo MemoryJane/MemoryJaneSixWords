@@ -2,24 +2,35 @@
   "version": "1.0",
   "session": {
     "new": true,
-    "sessionId": "ID2",
+    "sessionId": "SESSION_ID_LOCAL",
     "application": {
-      "applicationId": "MemoryJane"
+      "applicationId": "MemoryJaneSixWords"
     },
     "user": {
-      "userId": "Aaron"
-  }
+      "userId": "Aaron_LOCAL"
+    },
+    "attributes": {
+      "userStory": "banana banana banana banana banana banana period",
+      "recentStoryIndex": "2864420412082015",
+      "storyTime": "930348493049",
+      "timeStamp": "2864420412082015",
+      "storyState": "JustHeardAStory"
+    }
   },
   "request": {
-    "type": "IntentRequest",
-    "requestId": "CreateIntent",
+    "type": "LaunchRequest",
+    "requestId": "ListenIntent",
     "timestamp": "2015-05-13T12:34:56Z",
     "intent": {
-      "name": "CreateIntent",
+      "name": "ListenIntent",
       "slots": {
         "Story": {
           "name": "Story",
-          "value": "how do i question go to the exclamation"
+          "value": "this comma is comma the comma best comma story comma ever comma"
+        },
+        "Reaction": {
+          "name": "Reaction",
+          "value": "dag"
         }
       }
     }
