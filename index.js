@@ -296,11 +296,15 @@ var sixWords = (function () {
      */
     function punctuationFixer (storyArray) {
         for (i = 0; i < storyArray.length; i++) {
-            if (storyArray[i].toLowerCase() == "period" || storyArray[i].toLowerCase() == "comma") {
+            if (storyArray[i].toLowerCase() == "period" || storyArray[i].toLowerCase() == "comma" ||
+                storyArray[i].toLowerCase() == "exclamation" ||
+                storyArray[i].toLowerCase() == "question") {
                 if (i != 0) {
                     // This is not the first item, so append the punctuation to the previous word.
                     var punctuation = ".";
                     if (storyArray[i].toLowerCase() == "comma") punctuation = ",";
+                    else if (storyArray[i].toLowerCase()  == "exclamation") punctuation = "!";
+                    else if (storyArray[i].toLowerCase()  == "question") punctuation = "?";
                     storyArray[i-1] = storyArray[i-1].concat(punctuation);
                 }
 

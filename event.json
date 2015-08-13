@@ -1,0 +1,27 @@
+{
+  "version": "1.0",
+  "session": {
+    "new": true,
+    "sessionId": "ID2",
+    "application": {
+      "applicationId": "MemoryJane"
+    },
+    "user": {
+      "userId": "Aaron"
+  }
+  },
+  "request": {
+    "type": "IntentRequest",
+    "requestId": "CreateIntent",
+    "timestamp": "2015-05-13T12:34:56Z",
+    "intent": {
+      "name": "CreateIntent",
+      "slots": {
+        "Story": {
+          "name": "Story",
+          "value": "how do i question go to the exclamation"
+        }
+      }
+    }
+  }
+}
