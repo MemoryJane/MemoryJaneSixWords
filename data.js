@@ -65,7 +65,11 @@ var data = (function () {
          */
         getRandomStory: function (callback){
             // Get all of the data from the MemoryJaneSixWordStories Table
-            var tableParams = { TableName: "MemoryJaneSixWordStories"};
+            var tableParams = { TableName: "MemoryJaneSixWordStories",
+                FilterExpression : "#approved = :isTrue",
+                ExpressionAttributeNames : { "#approved" : "Approved" },
+                ExpressionAttributeValues : { ":isTrue" : {"BOOL":true} }
+            };
             dynamodb.scan(tableParams, function (tableStoryErr, tableStoryData) {
                 if (tableStoryErr) console.log("Data _tableScan_  ERROR " + tableStoryErr);
                 else {
