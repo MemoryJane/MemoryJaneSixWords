@@ -10,6 +10,8 @@ var data = (function () {
     function getDynamoDB () {
         var DB;
 
+        // We're checking the process variables to see if should go local. It is assumed we'll
+        // want to run
         if (process.env.MEMJANE_USE_LOCAL_DB && process.env.MEMJANE_USE_LOCAL_DB == "true") {
             DB = new AWS.DynamoDB({endpoint: new AWS.Endpoint('http://localhost:8000')});
             DB.config.update({accessKeyId: "myKeyId", secretAccessKey: "secretKey", region: "us-east-1"});
@@ -492,20 +494,18 @@ var data = (function () {
          */
         isRemix: function(userStory, lastHeardStory, isRemixCallback) {
             var notMatching = 0;
-            for (i = 0; i < 6; i++){
+            var matches = true;
+
+            for (i = 0; i < userStory.length; i++){
                 if (userStory[i] != lastHeardStory[i]){
-                    notMatching++;
-                    if (notMatching > 1){
-                        i = 8;
+                    if (++notMatching > 1){
+                        matches = false;
+                        i = userStory.length;
                     }
                 }
             }
-            if (notMatching != 1)
-            {
-                isRemixCallback(false);
-            }else{
-                isRemixCallback(true);
-            }
+
+            isRemixCallback(matches);
         },
 
         /**

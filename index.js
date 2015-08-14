@@ -293,7 +293,7 @@ var sixWords = (function () {
                 //They came here by accident, give a help message
             } else{
                 data.getStoriesByAuthor(1, session.attributes.Author, function(stories, timeStamps, authors){
-                    //Have Alexa say those stories and have the user say "more" if they want more
+                    // Have Alexa say those stories and have the user say "more" if they want more
                     // Save the story index to make sure we know which story was read.
                     session.attributes.recentStoryIndex = timeStamps[0];
                     session.attributes.storyState = "JustHeardAStory";
