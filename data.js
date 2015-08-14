@@ -501,17 +501,15 @@ var data = (function () {
                 TableName: "MemoryJaneSixWordStories",
                 FilterExpression : "#remixId = :storyId",
                 ExpressionAttributeNames : { "#remixId" : "RemixId" },
-                ExpressionAttributeValues : { ":storyId" : {"S":storyId} }
+                ExpressionAttributeValues : { ":storyId" : {"N":storyId} }
             };
             dynamodb.scan(areThereRemixesParams, function (remixesErr, remixesData) {
                 if (remixesErr) throw ("Data_areThereRemixes_ERROR " + remixesErr);
                 else {
                     var remix;
                     if (remixesData.Count > 0){
-                        console.log("THERE ARE REMIXES");
                         remix = true;
                     }else{
-                        console.log("THERE ARE NOT REMIXES");
                         remix = false;
                     }
                     areThereRemixesCallback(remix);
@@ -529,7 +527,7 @@ var data = (function () {
                 TableName: "MemoryJaneSixWordStories",
                 FilterExpression : "#remixId = :storyId",
                 ExpressionAttributeNames : { "#remixId" : "RemixId" },
-                ExpressionAttributeValues : { ":storyId" : {"S":storyId} }
+                ExpressionAttributeValues : { ":storyId" : {"N":storyId} }
             };
             dynamodb.scan(areThereRemixesParams, function (remixesErr, remixesData) {
                 if (remixesErr) throw ("Data_getRemixes_ERROR " + remixesErr);
