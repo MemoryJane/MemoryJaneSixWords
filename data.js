@@ -679,7 +679,7 @@ var data = (function () {
         /**
          * Checks to see if a story matches the current theme. Returns a boolean and the theme, if it matched.
          */
-        doesStoryMatchTheme: function(story, theme, doesStoryMatchThemeCallback) {
+        doesStoryMatchTheme: function(story, doesStoryMatchThemeCallback) {
             // We're looking for any themes where now is between the start and end times.
             var themeParams= { TableName: 'MemoryJaneSixWordThemes',
                 FilterExpression: '#startTime <= :now AND #endTime >= :now',
