@@ -63,34 +63,68 @@ var sixWords = (function () {
 
     var intentHandlers = {
         ListenIntent: function (intent, session, context) {
-            //TODO finish the "say n stories" logic
-            /**
-             * if (intent.slots && intent.slots.Num){
-                data.getRandomStories(intent.slots.Number.value, function(stories, timeStamps, authors){
-                    //Have Alexa say the stories
+            // Did the user ask for a specific number of stories?
+            if(intent.slots && intent.slots.NumberStoriesRequested && intent.slots.NumberStoriesRequested.value) {
+                // Yes, the user wants a number of stories. How many do they want?
+                var storyCountRequested = null;
+                switch (intent.slots.NumberStoriesRequested.value) {
+                    case "one":
+                    case "1":
+                        storyCountRequested = 1;
+                        break;
+                    case "two":
+                    case "to":
+                    case "too":
+                    case "2":
+                        storyCountRequested = 2;
+                        break;
+                    case "three":
+                    case "3":
+                        storyCountRequested = 3;
+                        break;
+                    case "four":
+                    case "for":
+                    case "4":
+                        storyCountRequested = 4;
+                        break;
+                    case "five":
+                    case "5":
+                        storyCountRequested = 5;
+                }
+                if (!storyCountRequested) {
+                    // Oops, they said a number that was not 1 to 5. Give them some instructions.
+                    var scriptKey = "ListenIntentMultipleStoriesBadCountAndBlank";
+                    alexaSpeak(scriptKey, intent.slots.NumberStoriesRequested.value, session, context, false);
+                } else {
+                    data.getRandomStories(storyCountRequested, function(stories, timeStamps, authors) {
+                        var storiesConcat = "";
+                        for (i = 0; i < stories.length; i++) { storiesConcat += stories[i]+" . . "; }
+                        alexaSpeak("ListenIntentMultipleStoriesAndBlank", storiesConcat, session, context, false);
+                    });
+                }
+            } else {
+                // Nope, didn't ask for a specific number of stories so, just get them a single story.
+                data.getRandomStory(function (nextStory, timeStamp, author) {
+                    // Save the story index to make sure we know which story was read.
+                    session.attributes.recentStoryIndex = timeStamp;
+                    session.attributes.Author = author;
+                    session.attributes.nextStory = nextStory;
+
+                    data.putUserActivity(session.user.userId, timeStamp, "Listen", function callback() { });
+
+                    data.areThereRemixes(timeStamp, function(areThereRemixes){
+                        if (areThereRemixes){
+                            // If at least 1 remix, have Alexa read the story and ask if they want to hear remixes
+                            session.attributes.storyState = "PromptedForRemixes";
+                            alexaSpeak("ListenIntentRemixesAndBlank", nextStory, session, context, false);
+                        }else{
+                            // If no remixes have Alexa read the story and ask if they want to up vote it.
+                            session.attributes.storyState = "JustHeardAStory";
+                            alexaSpeak("ListenIntentAndBlank", nextStory, session, context, false);
+                        }
+                    });
                 });
             }
-             */
-            // Get a story from data.
-            data.getRandomStory(function (nextStory, timeStamp, author) {
-                // Save the story index to make sure we know which story was read.
-                session.attributes.recentStoryIndex = timeStamp;
-                session.attributes.storyState = "JustHeardAStory";
-                session.attributes.Author = author;
-                session.attributes.nextStory = nextStory;
-                data.putUserActivity(session.user.userId, timeStamp, "Listen", function callback() { });
-
-                data.areThereRemixes(timeStamp, function(remixes){
-                    if (remixes){
-                        //If at least 1 remix, have Alexa read the story and ask if they want to hear remixes
-                        session.attributes.storyState = "PromptedForRemixes";
-                        alexaSpeak("ListenIntentRemixesAndBlank", nextStory, session, context, false);
-                    }else{
-                        // If no remixes have Alexa read the story and ask if they want to up vote it.
-                        alexaSpeak("ListenIntentAndBlank", nextStory, session, context, false);
-                    }
-                });
-            });
         },
         UpVoteIntent: function (intent, session, context) {
             // If we haven't just heard a story, then the user must be confused. Give them some help.

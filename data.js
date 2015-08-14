@@ -156,12 +156,12 @@ var data = (function () {
         },
 
         /**
-         * Gets "n" stories from the database and returns them
-         * @param numStories
-         * @param randomStoriesCallback
+         * Gets a specific number of random stories and returns them.
+         * @param storyCount
+         * @param getRandomStoriesCallback
          */
-        getRandomStories: function (numStories, randomStoriesCallback){
-            //Declare parameters for use in scan. These scan for all stories in the database that have been approved.
+        getRandomStories: function (storyCount, getRandomStoriesCallback){
+            // We're looking for any stories that are approved..
             var randomStoriesParams = {
                 TableName: "MemoryJaneSixWordStories",
                 FilterExpression : "#approved = :isTrue",
@@ -169,36 +169,39 @@ var data = (function () {
                 ExpressionAttributeValues : { ":isTrue" : {"BOOL":true} }
             };
 
+            // Get the stories.
             dynamodb.scan(randomStoriesParams, function (randomStoriesErr, randomStoriesData) {
-                if (randomStoriesErr) throw ("Data_getRandomStory_ERROR " + randomStoriesErr);
+                if (randomStoriesErr) throw ("Data_getRandomStories_ERROR " + randomStoriesErr);
                 else {
-                    //Declare empty arrays for the story indexes, stories, timeStamps, and authors for population
-                    //in the for loops.
-                    var randomStoryIndexes = [];
+                    // Declare empty arrays for the story indexes, stories, timeStamps, and authors.
                     var stories = [];
                     var timeStamps = [];
                     var authors = [];
 
-                    //Fill the indexes array with unique random numbers between 0 and count-1.
-                    for (i = 0; i < numStories; i++){
-                        randomStoryIndexes[i] = (Math.floor(Math.random() *randomStoriesData.Count));
-                        //Check the random number that was just inserted into the array to confirm that it is different
-                        //than all previous values. If not, decrement i to get a new value.
-                        for (j = 0; j < i; j++){
-                            if (randomStoryIndexes[i] == randomStoryIndexes[j]){
-                                i--;
-                            }
+                    // If there are more stories available than were requested, we need to do a
+                    // quick shuffling of the stories. We can do it directly in the Items array.
+                    if (randomStoriesData.Items.length > storyCount) {
+                        // We only need to shuffle to storyCount since we're only going to take that many
+                        // items when we return the array..
+                        for (i = 0; i < storyCount; i++) {
+                            var randomIndex = Math.floor(Math.random() * randomStoriesData.Items.length);
+                            var tempItem = randomStoriesData.Items[i];
+                            randomStoriesData.Items[i] = randomStoriesData.Items[randomIndex];
+                            randomStoriesData.Items[randomIndex] = tempItem;
                         }
+
+                        // Now, slice the array so that only the right number of items get returned.
+                        randomStoriesData.Items = randomStoriesData.Items.slice(0, storyCount);
                     }
 
-                    //Once the index array has been filled, use it to fill the other three arrays with the stories,
-                    //timeStamps and authors at those indexes. Then callback the three arrays.
-                    for (i = 0; i < numStories; i++) {
-                        stories[i] = randomStoriesData.Items[randomStoryIndexes[i]].Story.S;
-                        timeStamps[i] = randomStoriesData.Items[randomStoryIndexes[i]].TimeStamp.N.toString();
-                        authors[i] = randomStoriesData.Items[randomStoryIndexes[i]].Author.S;
+                    // Now put all the items into the data arrays for passback.
+                    for (i = 0; i < randomStoriesData.Items.length; i++) {
+                        stories.push(randomStoriesData.Items[i].Story.S);
+                        timeStamps.push(randomStoriesData.Items[i].TimeStamp.N.toString());
+                        authors.push(randomStoriesData.Items[i].Author.S);
                     }
-                    randomStoriesCallback(stories, timeStamps, authors);
+
+                    getRandomStoriesCallback(stories, timeStamps, authors);
                 }
             });
         },
