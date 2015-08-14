@@ -202,7 +202,7 @@ var data = (function () {
          * @param story
          * @param putStoryCallback
          */
-        putNewStory: function (author, story, putStoryCallback){
+        putNewStory: function (author, story, themeText, putStoryCallback){
             //Declare parameters for use in putItem. These put a new story into the database at an initial rating of
             //zero, a TimeStamp equal to the current time, Author as the user's userId and Story as the story that
             //they said to publish.
@@ -216,6 +216,9 @@ var data = (function () {
                     Author: {"S": author}
                 }
             };
+
+            // If we got a themeText, add it to the record.
+            if (themeText) newStoryParams.Item.ThemeText = themeText;
 
             dynamodb.putItem(newStoryParams, function (putStoryErr, putStoryData) {
                 if (putStoryErr) throw ("Data_putNewStory_ERROR " + putStoryErr);
@@ -483,7 +486,75 @@ var data = (function () {
          * requests to hear the theme stories.
          */
         areThereThemeStoriesToHear: function(userId, areThereThemeStoriesCallback) {
-            areThereThemeStoriesCallback(true, "starts with the word banana");
+            // First, check to see if it's a theme day.
+            // We're looking for any themes where now is between the start and end times.
+            var themeParams= { TableName: 'MemoryJaneSixWordThemes',
+                FilterExpression: '#startTime <= :now AND #endTime >= :now',
+                ExpressionAttributeNames: {
+                    '#startTime': "TimeStart",
+                    '#endTime': "TimeEnd"
+                },
+                ExpressionAttributeValues: {
+                    ':now': { N: getTimeStamp().toString() }
+                },
+            };
+
+            dynamodb.scan(themeParams, function (themeError, themeData) {
+                if (themeError) throw("Data_areThereThemeStoriesToHear_ERROR "+themeError);
+                else {
+                    // Did we get a theme?
+                    if (themeData.Count == 0) {
+                        // Nope. Return false.
+                        areThereThemeStoriesCallback(false, null);
+                    } else {
+                        // Yes, there is a theme. Has this user heard the stories for it?
+                        var alreadyHeardUsers = "";
+                        if (themeData.Items[0].UsersHeardStories) {
+                            alreadyHeardUsers = themeData.Items[0].UsersHeardStories.S;
+                        }
+
+                        if (alreadyHeardUsers && alreadyHeardUsers.search(userId) != -1) {
+                            // Yes, the user has already heard it, so we return false.
+                            areThereThemeStoriesCallback(false, null);
+                        } else {
+                            // User hasn't heard the stories, let's see if there are stories now that match the theme.
+                            var themeText = themeData.Items[0].ThemeText.S;
+                            var themeStoriesParams = {
+                                TableName: "MemoryJaneSixWordStories",
+                                FilterExpression : "#approved = :isTrue AND #theme = :theme",
+                                ExpressionAttributeNames : { "#approved" : "Approved", "#theme" : "ThemeText" },
+                                ExpressionAttributeValues : { ":isTrue" : {"BOOL":true}, ":theme" : { "S" : themeText } }
+                            };
+
+                            dynamodb.scan(themeStoriesParams, function (themeStoriesErr, themeStoriesData) {
+                                if (themeStoriesErr) throw ("Data_areThereTheseStoriesToHear_ERROR " + themeStoriesErr);
+                                else {
+                                    // Are there any stories that matched?
+                                    if (themeStoriesData.Count == 0) {
+                                        // There is a theme, but no stories match. Return false.
+                                        areThereThemeStoriesCallback(false, null);
+                                    } else {
+                                        // There are stories to hear! Record that this user heard them.
+                                        var userList = alreadyHeardUsers + userId + " ";
+                                        var updateToHeardParams = {
+                                            TableName : "MemoryJaneSixWordThemes",
+                                            Key : { TimeStart : { "N" : themeData.Items[0].TimeStart.N.toString() },
+                                                TimeEnd : { "N" : themeData.Items[0].TimeEnd.N.toString() } },
+                                            UpdateExpression : "SET #usersHeard = :userList",
+                                            ExpressionAttributeNames : { "#usersHeard" : "UsersHeardStories" },
+                                            ExpressionAttributeValues : { ":userList" : { "S" : userList } }
+                                        };
+
+                                        dynamodb.updateItem(updateToHeardParams, function(updateToHeardError, updateToheardData) {
+                                            areThereThemeStoriesCallback(true, themeText);
+                                        });
+                                    }
+                                }
+                            });
+                        }
+                    }
+                }
+            });
         },
 
         /**
@@ -512,28 +583,103 @@ var data = (function () {
                         // Nope. Return false.
                         isThereAThemeCallback(false, null);
                     } else {
-                        // Yep, return the theme.
-                        isThereAThemeCallback(true, themeData.Items[0].ThemeText.S);
+                        // Yep, now let's see if this user has heard this prompt already.
+                        var alreadyHeardUsers = "";
+                        if (themeData.Items[0].UsersHeardPrompt) {
+                            alreadyHeardUsers = themeData.Items[0].UsersHeardPrompt.S;
+                        }
+
+                        if (alreadyHeardUsers && alreadyHeardUsers.search(userId) != -1) {
+                            // Yes, the user has already heard it, so we return false.
+                            isThereAThemeCallback(false, null);
+                        } else {
+                            // Nope, hasn't heard it. So update the record with that fact and send back the theme.
+                            var userList = alreadyHeardUsers + userId + " ";
+                            var updateToHeardParams = {
+                                TableName : "MemoryJaneSixWordThemes",
+                                Key : { TimeStart : { "N" : themeData.Items[0].TimeStart.N.toString() },
+                                    TimeEnd : { "N" : themeData.Items[0].TimeEnd.N.toString() } },
+                                UpdateExpression : "SET #usersHeard = :userList",
+                                ExpressionAttributeNames : { "#usersHeard" : "UsersHeardPrompt" },
+                                ExpressionAttributeValues : { ":userList" : { "S" : userList } }
+                            };
+
+                            dynamodb.updateItem(updateToHeardParams, function(updateToHeardError, updateToheardData) {
+                                isThereAThemeCallback(true, themeData.Items[0].ThemeText.S);
+                            });
+                        }
                     }
                 }
             });
         },
 
         /**
-         *
+         * Get the stories that match the current theme.
+         * Returns at most 5 stories.
          */
         getThemeStories: function(getThemeStoriesCallback) {
-            var themeStories = ["banana 2 3 4 5 6", "banana is the coolest thing ever", "banana plays trombone in the band"];
-            var themeStoryIds = ["1", "2", "3"];
-            var themeAuthors = ["Aaron_LOCAL", "Aaron_LOCAL", "Aaron_LOCAL"];
+            // First, check to see if it's a theme day.
+            // We're looking for any themes where now is between the start and end times.
+            var themeParams= { TableName: 'MemoryJaneSixWordThemes',
+                FilterExpression: '#startTime <= :now AND #endTime >= :now',
+                ExpressionAttributeNames: {
+                    '#startTime': "TimeStart",
+                    '#endTime': "TimeEnd"
+                },
+                ExpressionAttributeValues: {
+                    ':now': { N: getTimeStamp().toString() }
+                },
+            };
 
-            getThemeStoriesCallback(themeStories, themeStoryIds, themeAuthors);
+            dynamodb.scan(themeParams, function (themeError, themeData) {
+                if (themeError) throw("Data_areThereThemeStoriesToHear_ERROR " + themeError);
+                else {
+                    // Did we get a theme?
+                    if (themeData.Count == 0) {
+                        // Nope. Return nulls.
+                        getThemeStoriesCallback(null, null, null);
+                    } else {
+                        // Okay, now see if there are stories for that theme.
+                        var themeText = themeData.Items[0].ThemeText.S;
+                        var themeStoriesParams = {
+                            TableName: "MemoryJaneSixWordStories",
+                            FilterExpression : "#approved = :isTrue AND #theme = :theme",
+                            ExpressionAttributeNames : { "#approved" : "Approved", "#theme" : "ThemeText" },
+                            ExpressionAttributeValues : { ":isTrue" : {"BOOL":true}, ":theme" : { "S" : themeText } }
+                        };
+
+                        dynamodb.scan(themeStoriesParams, function (themeStoriesErr, themeStoriesData) {
+                            if (themeStoriesErr) throw ("Data_getThemeStories_ERROR " + themeStoriesErr);
+                            else {
+                                // Are there any stories that matched?
+                                if (themeStoriesData.Count == 0) {
+                                    // There is a theme, but no stories match. Return false.
+                                    getThemeStoriesCallback(null, null, null);
+                                } else {
+                                    // We got stories. Format them and return them.
+                                    var stories = [];
+                                    var storyIds = [];
+                                    var authors = [];
+
+                                    for (i = 0; i < themeStoriesData.Count && i < 5; i++) {
+                                        stories.push(themeStoriesData.Items[i].Story.S);
+                                        storyIds.push(themeStoriesData.Items[i].TimeStamp.N.toString());
+                                        authors.push(themeStoriesData.Items[i].Author.S);
+                                    }
+
+                                    getThemeStoriesCallback(stories, storyIds, authors);
+                               }
+                            }
+                        });
+                    }
+                }
+            });
         },
 
         /**
-         *
+         * Checks to see if a story matches the current theme. Returns a boolean and the theme, if it matched.
          */
-        doesStoryMatchTheme: function(story, getThemeStoriesCallback) {
+        doesStoryMatchTheme: function(story, theme, doesStoryMatchThemeCallback) {
             // We're looking for any themes where now is between the start and end times.
             var themeParams= { TableName: 'MemoryJaneSixWordThemes',
                 FilterExpression: '#startTime <= :now AND #endTime >= :now',
@@ -552,21 +698,23 @@ var data = (function () {
                     // Did we even get a theme?
                     if (themeData.Count == 0) {
                         // Nope. Return false.
-                        getThemeStoriesCallback(true);
+                        doesStoryMatchThemeCallback(false, null);
                     } else {
                         // Yep. Let's check to see if the rule is met.
                         var ruleWords = themeData.Items[0].ThemeRule.S.split(" ");
                         var storyWords = story.split(" ");
 
                         var success = true;
+                        var themeText = themeData.Items[0].ThemeText.S;
                         for (i = 0; i < storyWords.length; i++) {
                             // If the ruleWord isn't a wild card, and it's not equal to the storyWord, we fail.
                             if (ruleWords[i] != "*" && ruleWords[i] != storyWords[i]) {
                                 success = false;
+                                themeText = null;
                                 i = storyWords.length;
                             }
                         }
-                        getThemeStoriesCallback(success);
+                        doesStoryMatchThemeCallback(success, themeText);
                     }
                 }
             });

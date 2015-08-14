@@ -12,7 +12,7 @@ var sixWords = (function () {
         if (!session.attributes) session.attributes = {};
         session.attributes.timeStarted = new Date().toString();
 
-        data.putUserActivity(session.user.userId, "", "SessionStarted", function callback() { });
+        data.putUserActivity(session.user.userId, " ", "SessionStarted", function callback() { });
         // TODO Maybe fire up the DB here?
     }
 
@@ -196,9 +196,12 @@ var sixWords = (function () {
                     session.attributes.userStory = userStory;
 
                     // Did the story match today's theme?
-                    data.doesStoryMatchTheme(userStory, function (doesStoryMatchTheme) {
+                    data.doesStoryMatchTheme(userStory, function (doesStoryMatchTheme, themeText) {
                         if (doesStoryMatchTheme) {
-                            // They matched the theme - encourage that behaviour!
+                            // They matched the theme. Save it for after they confirm we heard it right.
+                            session.attributes.userStoryTheme = themeText;
+
+                            // Encourage the behaviour!!
                             alexaSpeak("CreateIntentGoodStoryWithThemeAndBlank", userStory, session, context, false);
                         } else {
                             // No theme, just repeat the story back to them to confirm that we heard it correctly.
@@ -220,7 +223,8 @@ var sixWords = (function () {
                 });
             } else if (storyState == "JustCreatedAStory") {
                 // We just heard a story and we heard it right, so store it in the DB
-                data.putNewStory(userId, story, function(timeStamp, putStoryError) {
+                var themeText = session.attributes.userStoryTheme;
+                data.putNewStory(userId, story, themeText, function(timeStamp, putStoryError) {
                     // Remove the story from the session attributes, reset to thinking about creating.
                     session.attributes.storyState = "ThinkingAboutCreating";
                     data.putUserActivity(userId, timeStamp, "Create", function callback() { });
@@ -235,11 +239,17 @@ var sixWords = (function () {
             } else if (storyState == "JustAskedHearThemeStories") {
                 // They want to hear the theme stories of the day, so let's get them and recite them.
                 data.getThemeStories(function(themeStories, themeIds, themeAuthors) {
-                    // Create a single string of all of the stories.
-                    var storiesConcat = "";
-                    for (i = 0; i < themeStories.length; i++) { storiesConcat += themeStories[i]+" . . "; }
+                    if (themeStories) {
+                        // Create a single string of all of the stories.
+                        var storiesConcat = "";
+                        for (i = 0; i < themeStories.length; i++) { storiesConcat += themeStories[i]+" . . "; }
 
-                    alexaSpeak("YesIntentHearThemeStories", storiesConcat, session, context, false);
+                        alexaSpeak("YesIntentHearThemeStories", storiesConcat, session, context, false);
+                    } else {
+                        // Shouldn't happen, but just in case, we're in a bad state if the stories are null.
+                        session.attributes.storyState = undefined;
+                        alexaSpeak("BadState", null, session, context, false);
+                    }
                 });
             } else {
                 // Oops, not sure why they were saying Yes. Reset the state and give them some instructions.
