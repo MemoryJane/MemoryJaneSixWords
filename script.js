@@ -31,6 +31,9 @@ var script = (function () {
             "Now what?",
             "What would you like to do now?"],
 
+        ListenIntentRemixesAndBlank_Reaction: "%1 .",
+        ListenIntentRemixesAndBlank_Instruction: "This story has remixes! To hear the remixes say yes.",
+
         BadState_Instruction: "You can say tell me a story to hear a story or publish to write your own. " +
         "Which would you like to do?",
 
@@ -115,6 +118,13 @@ var script = (function () {
         "or say tell me a story to hear a story.",
         YesIntentHearThemeStories_MEDIUM_Instruction: "What would you like to do next? You can publish another story or say tell me a story.",
         YesIntentHearThemeStories_EXPERT_Instruction: "What would you like to do next?",
+
+        YesIntentHearRemixes_VerbosityKey: { "NOVICE": 5, "MEDIUM": 20 },
+        YesIntentHearRemixes_Reaction: "Cool beans, here's some theme remixes for you. . %1",
+        YesIntentHearRemixes_NOVICE_Instruction: "What would you like to do next? You can say publish to publish a story " +
+        "or say tell me a story to hear a story.",
+        YesIntentHearRemixes_MEDIUM_Instruction: "What would you like to do next? You can publish another story or say tell me a story.",
+        YesIntentHearRemixes_EXPERT_Instruction: "What would you like to do next?",
 
         YesIntentAllBananaStory_Reaction: "Oh. My. That story was righteous. Gnarly. Most certainly off of any sort "+
         "of chain. It will be praised through out the ages. You, " +

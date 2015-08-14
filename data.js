@@ -492,6 +492,59 @@ var data = (function () {
         },
 
         /**
+         * Determine if there is at least 1 remix associated with the given story.
+         * @param storyId
+         * @param areThereRemixesCallback
+         */
+        areThereRemixes: function (storyId, areThereRemixesCallback){
+            var areThereRemixesParams = {
+                TableName: "MemoryJaneSixWordStories",
+                FilterExpression : "#remixId = :storyId",
+                ExpressionAttributeNames : { "#remixId" : "RemixId" },
+                ExpressionAttributeValues : { ":storyId" : {"S":storyId} }
+            };
+            dynamodb.scan(areThereRemixesParams, function (remixesErr, remixesData) {
+                if (remixesErr) throw ("Data_areThereRemixes_ERROR " + remixesErr);
+                else {
+                    var remix;
+                    if (remixesData.Count > 0){
+                        console.log("THERE ARE REMIXES");
+                        remix = true;
+                    }else{
+                        console.log("THERE ARE NOT REMIXES");
+                        remix = false;
+                    }
+                    areThereRemixesCallback(remix);
+                }
+            });
+        },
+
+        /**
+         * Get all remixes associated with the given story.
+         * @param storyId
+         * @param getRemixesCallback
+         */
+        getRemixes: function (storyId, getRemixesCallback){
+            var areThereRemixesParams = {
+                TableName: "MemoryJaneSixWordStories",
+                FilterExpression : "#remixId = :storyId",
+                ExpressionAttributeNames : { "#remixId" : "RemixId" },
+                ExpressionAttributeValues : { ":storyId" : {"S":storyId} }
+            };
+            dynamodb.scan(areThereRemixesParams, function (remixesErr, remixesData) {
+                if (remixesErr) throw ("Data_getRemixes_ERROR " + remixesErr);
+                else {
+                    var remixCount = remixesData.Count;
+                    var remixes = [];
+                    for(i = 0; i < remixCount; i ++){
+                        remixes[i] = remixesData.Items[i].Story.S;
+                    }
+                    getRemixesCallback(remixes);
+                }
+            });
+        },
+
+        /**
          * Call this to see if there are theme stories for this user to hear.
          * Returns true if there are, and a string that is the theme of the day.
          * This function only returns true once per day, to ensure users don't get overwhelmed with

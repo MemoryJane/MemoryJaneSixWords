@@ -22,10 +22,10 @@
   },
   "request": {
     "type": "IntentRequest",
-    "requestId": "CreateIntent",
+    "requestId": "ListenIntent",
     "timestamp": "2015-05-13T12:34:56Z",
     "intent": {
-      "name": "CreateIntent",
+      "name": "ListenIntent",
       "slots": {
         "Story" : { "value": "gooper banana test test test test" }
       }

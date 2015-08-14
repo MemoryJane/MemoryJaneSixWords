@@ -80,8 +80,16 @@ var sixWords = (function () {
                 session.attributes.nextStory = nextStory;
                 data.putUserActivity(session.user.userId, timeStamp, "Listen", function callback() { });
 
-                // Read the story, Alexa, ask if they want to up vote it.
-                alexaSpeak("ListenIntentAndBlank", nextStory, session, context, false);
+                data.areThereRemixes(timeStamp, function(remixes){
+                    if (remixes){
+                        //If at least 1 remix, have Alexa read the story and ask if they want to hear remixes
+                        session.attributes.storyState = "PromptedForRemixes";
+                        alexaSpeak("ListenIntentRemixesAndBlank", nextStory, session, context, false);
+                    }else{
+                        // If no remixes have Alexa read the story and ask if they want to up vote it.
+                        alexaSpeak("ListenIntentAndBlank", nextStory, session, context, false);
+                    }
+                });
             });
         },
         UpVoteIntent: function (intent, session, context) {
@@ -275,6 +283,12 @@ var sixWords = (function () {
                             alexaSpeak("YesIntent", null, session, context, false);
                         }
                     });
+                });
+            }else if(storyState == "PromptedForRemixes"){
+                data.getRemixes(session.attributes.recentStoryIndex, function(remixes){
+                    var remixesConcat = "";
+                    for (i = 0; i < remixes.length; i++) { remixesConcat += remixes[i]+" . . "; }
+                    alexaSpeak("YesIntentHearRemixes", remixesConcat, session, context, false);
                 });
             } else if (storyState == "JustAskedHearThemeStories") {
                 // They want to hear the theme stories of the day, so let's get them and recite them.
