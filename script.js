@@ -34,6 +34,14 @@ var script = (function () {
         ListenIntentRemixesAndBlank_Reaction: "%1 .",
         ListenIntentRemixesAndBlank_Instruction: "This story has remixes! To hear the remixes say yes.",
 
+        ListenIntentMultipleStoriesBadCountAndBlank_Reaction: "Oops. I heard you ask for %1 stories, but I can " +
+        "only tell you five stories at a time, maximum.",
+        ListenIntentMultipleStoriesBadCountAndBlank_Instruction: "Try saying tell me one to five stories.",
+
+        ListenIntentMultipleStoriesAndBlank_Reaction: "%1 .",
+        ListenIntentMultipleStoriesAndBlank_Instruction: "You can say tell me a story to hear a story or publish " +
+        "to write your own. Which would you like to do?",
+
         BadState_Instruction: "You can say tell me a story to hear a story or publish to write your own. " +
         "Which would you like to do?",
 

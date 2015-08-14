@@ -219,7 +219,8 @@ var dataTheme = ( function () {
                                 areThereThemeStoriesCallback(false, null);
                             } else {
                                 // There are stories to hear! Record that this user heard them.
-                                updateThemeWithUserHeard(dynamodb, todaysTheme, "UsersHeardStories", userId, function() {
+                                var heardIndex = "UsersHeardStories";
+                                updateThemeWithUserHeard(dynamodb, todaysTheme, heardIndex, userId, function() {
                                     areThereThemeStoriesCallback(true, themeText);
                                 });
                             }
