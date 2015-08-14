@@ -27,7 +27,7 @@
     "intent": {
       "name": "CreateIntent",
       "slots": {
-        "Story" : { "value": "gooper banana test test test test" }
+        "Story" : { "value": "banana banana test test test test" }
       }
     }
   }
