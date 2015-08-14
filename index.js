@@ -104,35 +104,28 @@ var sixWords = (function () {
 
                 // Okay, now we can increment the story rating.
                 data.incrementStoryRating(session.attributes.recentStoryIndex, function (incrementError) {
-                    if (incrementError) { console.log("SixWords _upVoteIntent incrementRating  ERROR "+incrementError);
-                    } else {
-                        // Up vote done, now clear out the state and prepare the response.
-                        session.attributes.storyState = undefined;
+                    // Up vote done, now clear out the state and prepare the response.
+                    session.attributes.storyState = undefined;
 
-                        // If there was a reaction, add it to our DB.
-                        if (reactionResponse != "") {
-                            var userId = session.user.userId;
-                            var storyId = session.attributes.recentStoryIndex;
-                            data.addStoryReaction(reaction, storyId, userId, function(addReactionError) {
-                                if (addReactionError) {
-                                    console.log("SixWords _upVoteIntent addReaction  ERROR " + addReactionError);
-                                } else {
-                                    var news = script.getScript("NewsPreamble", "YouGotAComment", 0);
-                                    news = news.replace("%1", reactionResponse)+" "+session.attributes.nextStory;
-                                    data.addNews(session.attributes.Author, news, function(addNewsError){
-                                        alexaSpeak("UpVoteIntentAndBlank", reactionResponse, session, context, false);
-                                    });
-                                }
+                    // If there was a reaction, add it to our DB.
+                    if (reactionResponse != "") {
+                        var userId = session.user.userId;
+                        var storyId = session.attributes.recentStoryIndex;
+                        data.addStoryReaction(reaction, storyId, userId, function() {
+                            var news = script.getScript("NewsPreamble", "YouGotAComment", 0);
+                            news = news.replace("%1", reactionResponse)+" "+session.attributes.nextStory;
+                            data.addNews(session.attributes.Author, news, function(){
+                                alexaSpeak("UpVoteIntentAndBlank", reactionResponse, session, context, false);
                             });
-                        } else {
-                            // No reaction? No problem, just send the up vote response. Have to include the insert
-                            // text because this script key has an insert.
-                            var news = script.getScript("NewsPreamble", "YouGotAnUpVote", 0);
-                            news += " "+session.attributes.nextStory;
-                            data.addNews(session.attributes.Author, news, function(addNewsError){
-                                alexaSpeak("UpVoteIntentAndBlank", " ", session, context, false);
-                            });
-                        }
+                        });
+                    } else {
+                        // No reaction? No problem, just send the up vote response. Have to include the insert
+                        // text because this script key has an insert.
+                        var news = script.getScript("NewsPreamble", "YouGotAnUpVote", 0);
+                        news += " "+session.attributes.nextStory;
+                        data.addNews(session.attributes.Author, news, function(){
+                            alexaSpeak("UpVoteIntentAndBlank", " ", session, context, false);
+                        });
                     }
                 });
             }
@@ -145,21 +138,17 @@ var sixWords = (function () {
             } else {
                 // The user wants to hear the reactions for the most recent story.
                 data.getLatestStoryReactions(session.attributes.recentStoryIndex, function(reactions, getReactionsError){
-                    if (getReactionsError) {
-                        console.log("SixWords _hearReactionsIntent getReactions  ERROR " + error);
+                    // Were there any reactions for this story?
+                    if (!reactions) {
+                        // Nope, let the user down easy, and tell them how to be the first to react.
+                        alexaSpeak("HearReactionsIntentBadReaction", null, session, context, false);
                     } else {
-                        // Were there any reactions for this story?
-                        if (!reactions) {
-                            // Nope, let the user down easy, and tell them how to be the first to react.
-                            alexaSpeak("HearReactionsIntentBadReaction", null, session, context, false);
-                        } else {
-                            // Create a string of all the reactions, exclamation point separated.
-                            var allReactions = "";
-                            for (i = 0; i < reactions.length; i++) {
-                                allReactions += reactions[i]+"! ";
-                            }
-                            alexaSpeak("HearReactionsIntentAndBlank", allReactions, session, context, false);
+                        // Create a string of all the reactions, exclamation point separated.
+                        var allReactions = "";
+                        for (i = 0; i < reactions.length; i++) {
+                            allReactions += reactions[i]+"! ";
                         }
+                        alexaSpeak("HearReactionsIntentAndBlank", allReactions, session, context, false);
                     }
                 });
             }
@@ -232,18 +221,15 @@ var sixWords = (function () {
             } else if (storyState == "JustCreatedAStory") {
                 // We just heard a story and we heard it right, so store it in the DB
                 data.putNewStory(userId, story, function(timeStamp, putStoryError) {
-                    if (putStoryError) console.log("SixWords _yesIntent  ERROR "+putStoryError);
-                    else {
-                        // Remove the story from the session attributes, reset to thinking about creating.
-                        session.attributes.storyState = "ThinkingAboutCreating";
-                        data.putUserActivity(userId, timeStamp, "Create", function callback() { });
+                    // Remove the story from the session attributes, reset to thinking about creating.
+                    session.attributes.storyState = "ThinkingAboutCreating";
+                    data.putUserActivity(userId, timeStamp, "Create", function callback() { });
 
-                        // EASTER EGG - the six banana story gets a bad ass reaction.
-                        if (story == "banana banana banana banana banana banana"){
-                            alexaSpeak("YesIntentAllBananaStory", null, session, context, false);
-                        }else{
-                            alexaSpeak("YesIntent", null, session, context, false);
-                        }
+                    // EASTER EGG - the six banana story gets a bad ass reaction.
+                    if (story == "banana banana banana banana banana banana"){
+                        alexaSpeak("YesIntentAllBananaStory", null, session, context, false);
+                    }else{
+                        alexaSpeak("YesIntent", null, session, context, false);
                     }
                 });
             } else if (storyState == "JustAskedHearThemeStories") {
@@ -299,7 +285,7 @@ var sixWords = (function () {
         QuitIntent: function(intent, session, context) {
             // All done. Goodnight!
             alexaSpeak("QuitIntent", null, session, context, true);
-        },
+        }
     };
 
     /*
@@ -310,40 +296,37 @@ var sixWords = (function () {
     function alexaSpeak(scriptKey, insertText, session, context, endSession) {
         // Increment the user's verbosity level for this scriptKey, and get the count.
         data.incrementScriptListenCount(session.user.userId, scriptKey, function(incrementError, verbosityCount) {
-            if (incrementError) console.log("SixWords _alexaSpeak  ERROR "+incrementError);
-            else {
-                // Use the script key to get the reaction and the message.
-                var scriptReaction = script.getScript(scriptKey, "Reaction", verbosityCount);
-                var scriptMessage = script.getScript(scriptKey, "Instruction", verbosityCount);
-                var fullScriptResponse = scriptReaction+" "+scriptMessage;
+            // Use the script key to get the reaction and the message.
+            var scriptReaction = script.getScript(scriptKey, "Reaction", verbosityCount);
+            var scriptMessage = script.getScript(scriptKey, "Instruction", verbosityCount);
+            var fullScriptResponse = scriptReaction+" "+scriptMessage;
 
-                // If there is some text to insert, do it.
-                if (fullScriptResponse.search("%1") != -1 && insertText) {
-                    fullScriptResponse = fullScriptResponse.replace("%1", insertText);
-                    scriptMessage = scriptMessage.replace("%1", insertText);
-                }
-
-                // Log the response.
-                console.log("(*) Alexa Says: "+fullScriptResponse);
-
-                // Create a reprompt, which is just the message plus a short preamble.
-                var repromptReaction = script.getScript("Reprompt", "Reaction", 0);
-
-                // Create the response for Alexa.
-                var alexaResponse = { version: "1.0",
-                    response: {
-                        outputSpeech: { type: 'PlainText', text: fullScriptResponse },
-                        // Reprompt with the same message, with the reprompt reaction.
-                        reprompt: { outputSpeech: { type: 'PlainText', text: repromptReaction+" "+scriptMessage} },
-                        shouldEndSession: endSession
-                    }
-                };
-                // Add the current session attributes to the response.
-                alexaResponse.sessionAttributes = session.attributes;
-
-                // Send it to Alexa.
-                context.succeed(alexaResponse);
+            // If there is some text to insert, do it.
+            if (fullScriptResponse.search("%1") != -1 && insertText) {
+                fullScriptResponse = fullScriptResponse.replace("%1", insertText);
+                scriptMessage = scriptMessage.replace("%1", insertText);
             }
+
+            // Log the response.
+            console.log("(*) Alexa Says: "+fullScriptResponse);
+
+            // Create a reprompt, which is just the message plus a short preamble.
+            var repromptReaction = script.getScript("Reprompt", "Reaction", 0);
+
+            // Create the response for Alexa.
+            var alexaResponse = { version: "1.0",
+                response: {
+                    outputSpeech: { type: 'PlainText', text: fullScriptResponse },
+                    // Reprompt with the same message, with the reprompt reaction.
+                    reprompt: { outputSpeech: { type: 'PlainText', text: repromptReaction+" "+scriptMessage} },
+                    shouldEndSession: endSession
+                }
+            };
+            // Add the current session attributes to the response.
+            alexaResponse.sessionAttributes = session.attributes;
+
+            // Send it to Alexa.
+            context.succeed(alexaResponse);
         });
     }
 
