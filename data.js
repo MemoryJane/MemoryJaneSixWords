@@ -200,9 +200,11 @@ var data = (function () {
          * Puts a user created story into the database
          * @param author
          * @param story
+         * @param themeText
+         * @param remixId
          * @param putStoryCallback
          */
-        putNewStory: function (author, story, themeText, putStoryCallback){
+        putNewStory: function (author, story, themeText, remixId, putStoryCallback){
             //Declare parameters for use in putItem. These put a new story into the database at an initial rating of
             //zero, a TimeStamp equal to the current time, Author as the user's userId and Story as the story that
             //they said to publish.
@@ -219,6 +221,9 @@ var data = (function () {
 
             // If we got a themeText, add it to the record.
             if (themeText) newStoryParams.Item.ThemeText = { "S" : themeText };
+
+            // If the story is a remix, add the storyId of the story it remixed to the record.
+            if (remixId) newStoryParams.Item.RemixId = { "S" : remixId };
 
             dynamodb.putItem(newStoryParams, function (putStoryErr, putStoryData) {
                 if (putStoryErr) throw ("Data_putNewStory_ERROR " + putStoryErr);
@@ -480,6 +485,30 @@ var data = (function () {
         },
 
         /**
+         * Confirm that the story is a remix. This means that exactly 5 of the words are the same.
+         * @param userStory
+         * @param lastHeardStory
+         * @param isRemixCallback
+         */
+        isRemix: function(userStory, lastHeardStory, isRemixCallback) {
+            var notMatching = 0;
+            for (i = 0; i < 6; i++){
+                if (userStory[i] != lastHeardStory[i]){
+                    notMatching++;
+                    if (notMatching > 1){
+                        i = 8;
+                    }
+                }
+            }
+            if (notMatching != 1)
+            {
+                isRemixCallback(false);
+            }else{
+                isRemixCallback(true);
+            }
+        },
+
+        /**
          * Call this to see if there are theme stories for this user to hear.
          * Returns true if there are, and a string that is the theme of the day.
          * This function only returns true once per day, to ensure users don't get overwhelmed with
@@ -496,7 +525,7 @@ var data = (function () {
                 },
                 ExpressionAttributeValues: {
                     ':now': { N: getTimeStamp().toString() }
-                },
+                }
             };
 
             dynamodb.scan(themeParams, function (themeError, themeData) {
@@ -572,7 +601,7 @@ var data = (function () {
                 },
                 ExpressionAttributeValues: {
                     ':now': { N: getTimeStamp().toString() }
-                },
+                }
             };
 
             dynamodb.scan(themeParams, function (themeError, themeData) {
@@ -628,7 +657,7 @@ var data = (function () {
                 },
                 ExpressionAttributeValues: {
                     ':now': { N: getTimeStamp().toString() }
-                },
+                }
             };
 
             dynamodb.scan(themeParams, function (themeError, themeData) {
@@ -689,7 +718,7 @@ var data = (function () {
                 },
                 ExpressionAttributeValues: {
                     ':now': { N: getTimeStamp().toString() }
-                },
+                }
             };
 
             dynamodb.scan(themeParams, function (themeError, themeData) {

@@ -21,11 +21,14 @@
   },
   "request": {
     "type": "IntentRequest",
-    "requestId": "YesIntent",
+    "requestId": "CreateIntent",
     "timestamp": "2015-05-13T12:34:56Z",
     "intent": {
-      "name": "YesIntent",
+      "name": "CreateIntent",
       "slots": {
+        "Story": {
+          "value": "banana banana melon melon apple apple"
+        }
       }
     }
   }

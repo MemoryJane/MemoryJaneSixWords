@@ -91,14 +91,14 @@ var script = (function () {
         YesIntent_NOVICE_Instruction: "What would you like to do next? You can say publish to publish a story " +
         "or say tell me a story to hear a story.",
         YesIntent_MEDIUM_Instruction: "What would you like to do next? You can publish another story or say tell me a story.",
-        YesIntent_EXPERT_Instruction: "What do you want to do next?",
+        YesIntent_EXPERT_Instruction: "What would you like to do next?",
 
         YesIntentHearThemeStories_VerbosityKey: { "NOVICE": 5, "MEDIUM": 20 },
         YesIntentHearThemeStories_Reaction: "Excellent, here's some theme stories for you. . %1",
         YesIntentHearThemeStories_NOVICE_Instruction: "What would you like to do next? You can say publish to publish a story " +
         "or say tell me a story to hear a story.",
         YesIntentHearThemeStories_MEDIUM_Instruction: "What would you like to do next? You can publish another story or say tell me a story.",
-        YesIntentHearThemeStories_EXPERT_Instruction: "What do you want to do next?",
+        YesIntentHearThemeStories_EXPERT_Instruction: "What would you like to do next?",
 
         YesIntentAllBananaStory_Reaction: "Oh. My. That story was righteous. Gnarly. Most certainly off of any sort "+
         "of chain. It will be praised through out the ages. You, " +

@@ -63,6 +63,14 @@ var sixWords = (function () {
 
     var intentHandlers = {
         ListenIntent: function (intent, session, context) {
+            //TODO finish the "say n stories" logic
+            /**
+             * if (intent.slots && intent.slots.Number){
+                data.getRandomStories(intent.slots.Number.value, function(stories, timeStamps, authors){
+                    //Have Alexa say the stories
+                });
+            }
+             */
             // Get a story from data.
             data.getRandomStory(function (nextStory, timeStamp, author) {
                 // Save the story index to make sure we know which story was read.
@@ -195,6 +203,12 @@ var sixWords = (function () {
                     session.attributes.storyState = "JustCreatedAStory";
                     session.attributes.userStory = userStory;
 
+                    /**
+                     * data.isRemix(userStoryArrayWithoutPunctuation, session.attributes.nextStory, function(remix){
+
+                    });
+                     */
+                    
                     // Did the story match today's theme?
                     data.doesStoryMatchTheme(userStory, function (doesStoryMatchTheme, themeText) {
                         if (doesStoryMatchTheme) {
@@ -274,6 +288,24 @@ var sixWords = (function () {
                 // If we didn't just create a story, then this intent is not valid, give them some instructions.
                 session.attributes.storyState = undefined;
                 alexaSpeak("BadState", null, session, context, false);
+            }
+        },
+        MoreIntent: function(intent, session, context) {
+            if (session.attributes.storyState != "JustHeardAStory"){
+                //They came here by accident, give a help message
+            } else{
+                data.getStoriesByAuthor(1, session.attributes.Author, function(stories, timeStamps, authors){
+                    //Have Alexa say those stories and have the user say "more" if they want more
+                    // Save the story index to make sure we know which story was read.
+                    session.attributes.recentStoryIndex = timeStamps[0];
+                    session.attributes.storyState = "JustHeardAStory";
+                    session.attributes.Author = authors[0];
+                    session.attributes.nextStory = stories[0];
+                    data.putUserActivity(session.user.userId, timeStamps[0], "Listen", function callback() { });
+
+                    // Read the story, Alexa, ask if they want to up vote it.
+                    //alexaSpeak("ListenIntentAndBlank", stories[0], session, context, false);
+                });
             }
         },
         HelpIntent: function(intent, session, context) {
