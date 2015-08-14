@@ -10,7 +10,7 @@
       "userId": "amzn1.account.AFM2SDUDN23KH6MJHROQVWCIW3IA"
     },
     "attributes": {
-      "userStory": "banana banana test test test test",
+      "userStory": "banana banana test",
       "userStoryTheme": "starts with the word banana",
       "recentStoryIndex": "2864420412082015",
       "storyTime": "930348493049",
@@ -21,11 +21,12 @@
   },
   "request": {
     "type": "IntentRequest",
-    "requestId": "YesIntent",
+    "requestId": "CreateIntent",
     "timestamp": "2015-05-13T12:34:56Z",
     "intent": {
-      "name": "YesIntent",
+      "name": "CreateIntent",
       "slots": {
+        "Story" : { "value": "banana banana test test test test" }
       }
     }
   }

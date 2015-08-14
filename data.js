@@ -689,7 +689,7 @@ var data = (function () {
                 },
                 ExpressionAttributeValues: {
                     ':now': { N: getTimeStamp().toString() }
-                },
+                }
             };
 
             dynamodb.scan(themeParams, function (themeError, themeData) {
