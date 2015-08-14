@@ -392,10 +392,10 @@ var data = (function () {
                 //already been read, return undefined. Otherwise, return the most recent piece of news and mark it
                 //as read.
                 if (!newsQueryData.Items[0]){
-                    callback(undefined);
+                    getNewsCallback(undefined);
                 } else {
                     if (newsQueryData.Items[0].Read.S == "true"){
-                        callback(undefined);
+                        getNewsCallback(undefined);
                     }else {
                         var updateItemParams = {
                             TableName : "MemoryJaneSixWordNews",
@@ -407,6 +407,45 @@ var data = (function () {
                         dynamodb.updateItem(updateItemParams, function(newsQueryErr, newsData){
                             getNewsCallback(newsQueryData.Items[0].News.S);
                         });
+                    }
+                }
+            });
+        },
+
+        /**
+         * Checks if a specific user has news
+         * @param user
+         * @param hasNewsCallback
+         */
+        hasNews: function(user, hasNewsCallback){
+            //Declare parameters for use in query. These check if there is news associated with the userId.
+            var getNewsParams = {
+                TableName: 'MemoryJaneSixWordNews',
+                KeyConditionExpression: '#hashkey = :hk_val AND #rangekey >= :rk_val',
+                ExpressionAttributeNames: {
+                    '#hashkey': "userId",
+                    '#rangekey': "TimeStamp"
+                },
+                ExpressionAttributeValues: {
+                    ':hk_val': {S: user},
+                    ':rk_val': {N: "0"}
+                },
+                ScanIndexForward: false,
+                Limit: 1
+            };
+
+            dynamodb.query(getNewsParams, function (newsQueryErr, newsQueryData) {
+                if (newsQueryErr) throw ("Data_hasNews_ERROR " + newsQueryErr);
+
+                //If the query returned no news items, return false. Otherwise, if the first item returned has
+                //already been read, return false. Otherwise, return true.
+                if (!newsQueryData.Items[0]){
+                    hasNewsCallback(false);
+                } else {
+                    if (newsQueryData.Items[0].Read.S == "true"){
+                        hasNewsCallback(false);
+                    }else {
+                        hasNewsCallback(true);
                     }
                 }
             });

@@ -20,10 +20,9 @@ var sixWords = (function () {
     var requestHandlers = {
         LaunchRequest: function (event, context) {
             var userId = event.session.user.userId;
-
             // Let's see of the user has any news. If so, we want to give them a chance to hear it.
-            data.getNews(userId, function(news) {
-                if (news == undefined){
+            data.hasNews(userId, function(news) {
+                if (news == false){
                     // No news. Let's see if it's a theme day.
                     data.areThereThemeStoriesToHear(userId, function(areThereThemeStories, theTheme) {
                         if (!areThereThemeStories) {
@@ -39,7 +38,6 @@ var sixWords = (function () {
                 } else {
                     // Ask the user if they want to receive their news.
                     event.session.attributes.storyState = "GivenNewsPrompt";
-                    event.session.attributes.News = news;
                     alexaSpeak("GivenNews", null, event.session, context, false);
                 }
             });
@@ -217,7 +215,9 @@ var sixWords = (function () {
 
             if (storyState == "GivenNewsPrompt"){
                 //If the user was told that they have news and they said yes, give them the news
-                alexaSpeak("GivingNews", session.attributes.News, session, context, false);
+                data.getNews(userId, function(news){
+                    alexaSpeak("GivingNews", session.attributes.News, session, context, false);
+                });
             } else if (storyState == "JustCreatedAStory") {
                 // We just heard a story and we heard it right, so store it in the DB
                 data.putNewStory(userId, story, function(timeStamp, putStoryError) {
