@@ -218,7 +218,7 @@ var data = (function () {
             };
 
             // If we got a themeText, add it to the record.
-            if (themeText) newStoryParams.Item.ThemeText = themeText;
+            if (themeText) newStoryParams.Item.ThemeText = { "S" : themeText };
 
             dynamodb.putItem(newStoryParams, function (putStoryErr, putStoryData) {
                 if (putStoryErr) throw ("Data_putNewStory_ERROR " + putStoryErr);
