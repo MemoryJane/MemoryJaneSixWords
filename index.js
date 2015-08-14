@@ -337,18 +337,23 @@ var sixWords = (function () {
                 alexaSpeak("BadState", null, session, context, false);
             } else{
                 var storiesToGet = 1;
-                data.getStoriesByAuthor(storiesToGet, session.attributes.Author, function(stories, timeStamps, authors){
-                    // Have Alexa say those stories and have the user say "more" if they want more
-                    // Save the story index to make sure we know which story was read.
-                    session.attributes.recentStoryIndex = timeStamps[0];
-                    session.attributes.storyState = "JustHeardAStory";
-                    session.attributes.Author = authors[0];
-                    session.attributes.nextStory = stories[0];
-                    data.putUserActivity(session.user.userId, timeStamps[0], "Listen", function callback() { });
+                data.getStoriesByAuthor(storiesToGet, session.attributes.Author, function(stories, timeStamps, authors, numStories){
+                    if (numStories == 1){
+                        //If the user only has one story, no point in giving it again.
+                        alexaSpeak("MoreIntentOneStory", null, session, context, false);
+                    }else{
+                        // Have Alexa say those stories and have the user say "more" if they want more
+                        // Save the story index to make sure we know which story was read.
+                        session.attributes.recentStoryIndex = timeStamps[0];
+                        session.attributes.storyState = "JustHeardAStory";
+                        session.attributes.Author = authors[0];
+                        session.attributes.nextStory = stories[0];
+                        data.putUserActivity(session.user.userId, timeStamps[0], "More", function callback() { });
 
-                    var storiesConcat = "";
-                    for (i = 0; i < storiesToGet; i++) { storiesConcat += stories[i]+" . . "; }
-                    alexaSpeak("MoreIntentHearStories", storiesConcat, session, context, false);
+                        var storiesConcat = "";
+                        for (i = 0; i < storiesToGet; i++) { storiesConcat += stories[i]+" . . "; }
+                        alexaSpeak("MoreIntentHearStories", storiesConcat, session, context, false);
+                    }
                 });
             }
         },

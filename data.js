@@ -150,7 +150,7 @@ var data = (function () {
                         timeStamps[i] = authorStoryData.Items[authorStoryIndexes[i]].TimeStamp.N.toString();
                         authors[i] = authorStoryData.Items[authorStoryIndexes[i]].Author.S;
                     }
-                    authorStoriesCallback(stories, timeStamps, authors);
+                    authorStoriesCallback(stories, timeStamps, authors, authorStoryData.Count);
                 }
             });
         },
