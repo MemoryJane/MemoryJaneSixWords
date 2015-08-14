@@ -212,9 +212,6 @@ var sixWords = (function () {
                     // Did the story match today's theme?
                     data.doesStoryMatchTheme(userStory, function (doesStoryMatchTheme, themeText) {
                         if (doesStoryMatchTheme) {
-                            // They matched the theme. Save it for after they confirm we heard it right.
-                            session.attributes.userStoryTheme = themeText;
-
                             // Encourage the behaviour!!
                             alexaSpeak("CreateIntentGoodStoryWithThemeAndBlank", userStory, session, context, false);
                         } else {
@@ -237,18 +234,19 @@ var sixWords = (function () {
                 });
             } else if (storyState == "JustCreatedAStory") {
                 // We just heard a story and we heard it right, so store it in the DB
-                var themeText = session.attributes.userStoryTheme;
-                data.putNewStory(userId, story, themeText, function(timeStamp, putStoryError) {
-                    // Remove the story from the session attributes, reset to thinking about creating.
-                    session.attributes.storyState = "ThinkingAboutCreating";
-                    data.putUserActivity(userId, timeStamp, "Create", function callback() { });
+                data.doesStoryMatchTheme(story, function(doesStoryMatchTheme, themeText) {
+                    data.putNewStory(userId, story, themeText, function(timeStamp, putStoryError) {
+                        // Remove the story from the session attributes, reset to thinking about creating.
+                        session.attributes.storyState = "ThinkingAboutCreating";
+                        data.putUserActivity(userId, timeStamp, "Create", function callback() { });
 
-                    // EASTER EGG - the six banana story gets a bad ass reaction.
-                    if (story == "banana banana banana banana banana banana"){
-                        alexaSpeak("YesIntentAllBananaStory", null, session, context, false);
-                    }else{
-                        alexaSpeak("YesIntent", null, session, context, false);
-                    }
+                        // EASTER EGG - the six banana story gets a bad ass reaction.
+                        if (story == "banana banana banana banana banana banana"){
+                            alexaSpeak("YesIntentAllBananaStory", null, session, context, false);
+                        }else{
+                            alexaSpeak("YesIntent", null, session, context, false);
+                        }
+                    });
                 });
             } else if (storyState == "JustAskedHearThemeStories") {
                 // They want to hear the theme stories of the day, so let's get them and recite them.
