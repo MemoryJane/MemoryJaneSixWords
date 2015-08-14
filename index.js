@@ -332,9 +332,12 @@ var sixWords = (function () {
         },
         MoreIntent: function(intent, session, context) {
             if (session.attributes.storyState != "JustHeardAStory"){
-                //They came here by accident, give a help message
+                // If we didn't just hear a story, then this intent is not valid, give them some instructions.
+                session.attributes.storyState = undefined;
+                alexaSpeak("BadState", null, session, context, false);
             } else{
-                data.getStoriesByAuthor(1, session.attributes.Author, function(stories, timeStamps, authors){
+                var storiesToGet = 1;
+                data.getStoriesByAuthor(storiesToGet, session.attributes.Author, function(stories, timeStamps, authors){
                     // Have Alexa say those stories and have the user say "more" if they want more
                     // Save the story index to make sure we know which story was read.
                     session.attributes.recentStoryIndex = timeStamps[0];
@@ -343,8 +346,9 @@ var sixWords = (function () {
                     session.attributes.nextStory = stories[0];
                     data.putUserActivity(session.user.userId, timeStamps[0], "Listen", function callback() { });
 
-                    // Read the story, Alexa, ask if they want to up vote it.
-                    //alexaSpeak("ListenIntentAndBlank", stories[0], session, context, false);
+                    var storiesConcat = "";
+                    for (i = 0; i < storiesToGet; i++) { storiesConcat += stories[i]+" . . "; }
+                    alexaSpeak("MoreIntentHearStories", storiesConcat, session, context, false);
                 });
             }
         },

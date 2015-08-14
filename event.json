@@ -15,17 +15,18 @@
       "recentStoryIndex": "20158130746160212",
       "storyTime": "930348493049",
       "timeStamp": "2864420412082015",
-      "storyState": "PromptedForRemixes",
+      "storyState": "JustHeardAStory",
+      "Author": "amzn1.account.AFM2SDUDN23KH6MJHROQVWCIW3IA",
       "userId": "amzn1.account.AFM2SDUDN23KH6MJHROQVWCIW3IA",
       "nextStory": "banana banana test test test banana"
     }
   },
   "request": {
     "type": "IntentRequest",
-    "requestId": "YesIntent",
+    "requestId": "MoreIntent",
     "timestamp": "2015-05-13T12:34:56Z",
     "intent": {
-      "name": "YesIntent",
+      "name": "MoreIntent",
       "slots": {
         "Story" : { "value": "banana banana test test test test" }
       }

@@ -152,6 +152,13 @@ var script = (function () {
         NoIntentHearThemeStories_Instruction: "You can say tell me a story to hear a story or publish to write your own. " +
         "Which would you like to do?",
 
+        MoreIntentHearStories_VerbosityKey: { "NOVICE": 5, "MEDIUM": 20 },
+        MoreIntentHearStories_Reaction: "Awesome sauce, here's another story from that author for you. . %1",
+        MoreIntentHearStories_NOVICE_Instruction: "What would you like to do next? You can say more to hear another from that author " +
+        "or say tell me a story to hear a story.",
+        MoreIntentHearStories_MEDIUM_Instruction: "What would you like to do next? You can say more or say tell me a story.",
+        MoreIntentHearStories_EXPERT_Instruction: "What would you like to do next?",
+
         HelpIntentCreating_Instruction: "To create a story, say publish followed by any six words.",
         HelpIntentCreatedAndBlank_Instruction: "You just published the story %1. Did I hear you correctly",
         HelpIntentHeard_Instruction: "To hear another story say tell me a story.",
