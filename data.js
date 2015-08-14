@@ -487,28 +487,6 @@ var data = (function () {
         },
 
         /**
-         * Confirm that the story is a remix. This means that exactly 5 of the words are the same.
-         * @param userStory
-         * @param lastHeardStory
-         * @param isRemixCallback
-         */
-        isRemix: function(userStory, lastHeardStory, isRemixCallback) {
-            var notMatching = 0;
-            var matches = true;
-
-            for (i = 0; i < userStory.length; i++){
-                if (userStory[i] != lastHeardStory[i]){
-                    if (++notMatching > 1){
-                        matches = false;
-                        i = userStory.length;
-                    }
-                }
-            }
-
-            isRemixCallback(matches);
-        },
-
-        /**
          * Call this to see if there are theme stories for this user to hear.
          * Returns true if there are, and a string that is the theme of the day.
          * This function only returns true once per day, to ensure users don't get overwhelmed with

@@ -65,7 +65,7 @@ var sixWords = (function () {
         ListenIntent: function (intent, session, context) {
             //TODO finish the "say n stories" logic
             /**
-             * if (intent.slots && intent.slots.Number){
+             * if (intent.slots && intent.slots.Num){
                 data.getRandomStories(intent.slots.Number.value, function(stories, timeStamps, authors){
                     //Have Alexa say the stories
                 });
@@ -203,20 +203,44 @@ var sixWords = (function () {
                     session.attributes.storyState = "JustCreatedAStory";
                     session.attributes.userStory = userStory;
 
-                    /**
-                     * data.isRemix(userStoryArrayWithoutPunctuation, session.attributes.nextStory, function(remix){
+                    //Determine if the story was a remix
+                    var notMatching = 0;
+                    var matches = true;
+                    var storyJustHeard = session.attributes.nextStory.split(" ");
 
-                    });
-                     */
+                    for (i = 0; i < userStoryArrayWithoutPunctuation.length; i++){
+                        if (userStoryArrayWithoutPunctuation[i] != storyJustHeard[i]){
+                            if (++notMatching > 1){
+                                matches = false;
+                                i = userStoryArrayWithoutPunctuation.length;
+                            }
+                        }
+                    }
+                    session.attributes.isRemix = matches;
                     
                     // Did the story match today's theme?
                     data.doesStoryMatchTheme(userStory, function (doesStoryMatchTheme, themeText) {
                         if (doesStoryMatchTheme) {
-                            // Encourage the behaviour!!
-                            alexaSpeak("CreateIntentGoodStoryWithThemeAndBlank", userStory, session, context, false);
+                            if(matches){
+                                //Is a remix and matches the theme
+                                alexaSpeak("CreateIntentGoodStoryWithRemixPlusThemeAndBlank",
+                                    userStory, session, context, false);
+                            }else{
+                                //Is not a remix and matches the theme
+                                // Encourage the behaviour!!
+                                alexaSpeak("CreateIntentGoodStoryWithThemeAndBlank",
+                                    userStory, session, context, false);
+                            }
                         } else {
-                            // No theme, just repeat the story back to them to confirm that we heard it correctly.
-                            alexaSpeak("CreateIntentGoodStoryAndBlank", userStory, session, context, false);
+                            if(matches){
+                                //Is a remix and does not match the theme
+                                alexaSpeak("CreateIntentGoodStoryWithRemixAndBlank",
+                                    userStory, session, context, false);
+                            }else{
+                                // No theme, just repeat the story back to them to confirm that we heard it correctly.
+                                //Is not a remix and does not match the theme
+                                alexaSpeak("CreateIntentGoodStoryAndBlank", userStory, session, context, false);
+                            }
                         }
                     });
                 }
@@ -235,7 +259,11 @@ var sixWords = (function () {
             } else if (storyState == "JustCreatedAStory") {
                 // We just heard a story and we heard it right, so store it in the DB
                 data.doesStoryMatchTheme(story, function(doesStoryMatchTheme, themeText) {
-                    data.putNewStory(userId, story, themeText, function(timeStamp, putStoryError) {
+                    var remixAuthorId;
+                    if (session.attributes.isRemix){
+                        remixAuthorId = session.attributes.author;
+                    }
+                    data.putNewStory(userId, story, themeText, remixAuthorId, function(timeStamp, putStoryError) {
                         // Remove the story from the session attributes, reset to thinking about creating.
                         session.attributes.storyState = "ThinkingAboutCreating";
                         data.putUserActivity(userId, timeStamp, "Create", function callback() { });

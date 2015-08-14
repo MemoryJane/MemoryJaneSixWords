@@ -83,6 +83,22 @@ var script = (function () {
             "I just want to make sure I heard that right. Did you say %1?",
             "Just to confirm, did you say %1?"],
 
+        CreateIntentGoodStoryWithRemixAndBlank_Reaction: [
+            "That was an awesome remix, you really improved that story. Good job!",
+            "Wow, that was an insane remix. Well done."],
+        CreateIntentGoodStoryWithRemixAndBlank_Instruction: [
+            "I just want to confirm I heard it right. Did you say %1?",
+            "I just want to make sure I heard that right. Did you say %1?",
+            "Just to confirm, did you say %1?"],
+
+        CreateIntentGoodStoryWithRemixPlusThemeAndBlank_Reaction: [
+            "I can't believe it. That was a crazy remix and you matched our theme. Impressive!",
+            "That was a crazy awesome remix and you matched our theme. Great job!"],
+        CreateIntentGoodStoryWithRemixPlusThemeAndBlank_Instruction: [
+            "I just want to confirm I heard it right. Did you say %1?",
+            "I just want to make sure I heard that right. Did you say %1?",
+            "Just to confirm, did you say %1?"],
+
         YesIntent_VerbosityKey: { "NOVICE": 5, "MEDIUM": 20 },
         YesIntent_Reaction: [
             "Coolio! Your story is saved. I can't wait for other people to hear it.",
