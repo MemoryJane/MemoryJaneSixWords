@@ -25,7 +25,6 @@
     "intent": {
       "name": "YesIntent",
       "slots": {
-        "Story": {"value": "joe is the best fruit ever"}
       }
     }
   }

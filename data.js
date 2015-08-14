@@ -512,8 +512,31 @@ var data = (function () {
                         // Nope. Return false.
                         isThereAThemeCallback(false, null);
                     } else {
-                        // Yep, return the theme.
-                        isThereAThemeCallback(true, themeData.Items[0].ThemeText.S);
+                        // Yep, now let's see if this user has heard this prompt already.
+                        var alreadyHeardUsers = "";
+                        if (themeData.Items[0].UsersHeard) {
+                            alreadyHeardUsers = themeData.Items[0].UsersHeard.S;
+                        }
+
+                        if (alreadyHeardUsers && alreadyHeardUsers.search(userId) != -1) {
+                            // Yes, the user has already heard it, so we return false.
+                            isThereAThemeCallback(false, null);
+                        } else {
+                            // Nope, hasn't heard it. So update the record with that fact and send back the theme.
+                            var userList = alreadyHeardUsers + userId + " ";
+                            var updateToHeardParams = {
+                                TableName : "MemoryJaneSixWordThemes",
+                                Key : { TimeStart : { "N" : themeData.Items[0].TimeStart.N.toString() },
+                                    TimeEnd : { "N" : themeData.Items[0].TimeEnd.N.toString() } },
+                                UpdateExpression : "SET #usersHeard = :userList",
+                                ExpressionAttributeNames : { "#usersHeard" : "UsersHeard" },
+                                ExpressionAttributeValues : { ":userList" : { "S" : userList } }
+                            };
+
+                            dynamodb.updateItem(updateToHeardParams, function(updateToHeardError, updateToheardData) {
+                                isThereAThemeCallback(true, themeData.Items[0].ThemeText.S);
+                            });
+                        }
                     }
                 }
             });

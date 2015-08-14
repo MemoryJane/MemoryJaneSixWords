@@ -12,7 +12,7 @@ var sixWords = (function () {
         if (!session.attributes) session.attributes = {};
         session.attributes.timeStarted = new Date().toString();
 
-        data.putUserActivity(session.user.userId, "", "SessionStarted", function callback() { });
+        data.putUserActivity(session.user.userId, " ", "SessionStarted", function callback() { });
         // TODO Maybe fire up the DB here?
     }
 
