@@ -28,8 +28,7 @@
     "intent": {
       "name": "MoreIntent",
       "slots": {
-        "Story" : { "value": "banana banana test test test test" },
-        "NumberStoriesRequested" : { "value": "three" }
+        "Story" : { "value": "banana banana test test test test" }
       }
     }
   }

@@ -29,7 +29,11 @@ var data = (function () {
         return DB;
     }
 
-    function getTimeStamp (){
+    /**
+     * Private helper function (with a separate public exposure function). Returns the current time
+     * as a number time stamp.
+     */
+    function getTimeStamp () {
         var rightNow = new Date();
         return timeStamp = Number(rightNow.getUTCMilliseconds()+1)
             +((rightNow.getUTCSeconds()+1)*1000)
@@ -38,6 +42,62 @@ var data = (function () {
             +(rightNow.getUTCDate()*1000000000)
             +((rightNow.getUTCMonth()+1)*100000000000)
             +(rightNow.getUTCFullYear()*10000000000000);
+    }
+
+    /**
+     *
+     */
+    function getRandomStories(storyCountRequested, author, getRandomStoriesCallback) {
+        // We're looking for any stories that are approved..
+        var randomStoriesParams = {
+            TableName: "MemoryJaneSixWordStories",
+            FilterExpression : "#approved = :isTrue",
+            ExpressionAttributeNames : { "#approved" : "Approved" },
+            ExpressionAttributeValues : { ":isTrue" : {"BOOL":true} }
+        };
+
+        // If there's an author passed in, add the limitation tot he params.
+        if(author) {
+            randomStoriesParams.FilterExpression += " AND #thisauthor = :author";
+            randomStoriesParams.ExpressionAttributeNames["#thisauthor"] = "Author";
+            randomStoriesParams.ExpressionAttributeValues[":author"] = { "S" : author };
+        }
+
+        // Get the stories.
+        dynamodb.scan(randomStoriesParams, function (randomStoriesErr, randomStoriesData) {
+            if (randomStoriesErr) throw ("Data_getRandomStories_ERROR " + randomStoriesErr);
+            else {
+                // Declare empty arrays for the story indexes, stories, timeStamps, and authors.
+                var stories = [];
+                var timeStamps = [];
+                var authors = [];
+
+                // If there are more stories available than were requested, we need to do a
+                // quick shuffling of the stories. We can do it directly in the Items array.
+                if (randomStoriesData.Items.length > storyCountRequested) {
+                    // We only need to shuffle to storyCount since we're only going to take that many
+                    // items when we return the array..
+                    for (i = 0; i < storyCountRequested; i++) {
+                        var randomIndex = Math.floor(Math.random() * randomStoriesData.Items.length);
+                        var tempItem = randomStoriesData.Items[i];
+                        randomStoriesData.Items[i] = randomStoriesData.Items[randomIndex];
+                        randomStoriesData.Items[randomIndex] = tempItem;
+                    }
+
+                    // Now, slice the array so that only the right number of items get returned.
+                    randomStoriesData.Items = randomStoriesData.Items.slice(0, storyCountRequested);
+                }
+
+                // Now put all the items into the data arrays for passback.
+                for (i = 0; i < randomStoriesData.Items.length; i++) {
+                    stories.push(randomStoriesData.Items[i].Story.S);
+                    timeStamps.push(randomStoriesData.Items[i].TimeStamp.N.toString());
+                    authors.push(randomStoriesData.Items[i].Author.S);
+                }
+
+                getRandomStoriesCallback(stories, timeStamps, authors);
+            }
+        });
     }
 
     return {
@@ -77,132 +137,34 @@ var data = (function () {
 
          /**
          * Gets a random story from the database and returns it
-         * @param randomStoryCallback
+         * @param getRandomStoryCallback
          */
-        getRandomStory: function (randomStoryCallback){
-            //Declare parameters for use in scan. These scan for all stories in the database that have been approved.
-            var getRandomStoryParams = {
-                TableName: "MemoryJaneSixWordStories",
-                FilterExpression : "#approved = :isTrue",
-                ExpressionAttributeNames : { "#approved" : "Approved" },
-                ExpressionAttributeValues : { ":isTrue" : {"BOOL":true} }
-            };
-
-            dynamodb.scan(getRandomStoryParams, function (randomStoryErr, randomStoryData) {
-                if (randomStoryErr) throw ("Data_getRandomStory_ERROR " + randomStoryErr);
-                else {
-                    //Count the total number of stories and then pick a random index between 0 and count-1.
-                    var storyCount = randomStoryData.Count;
-                    var randomStoryIndex = (Math.floor(Math.random() * storyCount));
-
-                    //Set information for the story, timeStamp and author to the information for the story at the
-                    //random index. Then callback the story, timeStamp and author.
-                    var story = randomStoryData.Items[randomStoryIndex].Story.S;
-                    var timeStamp = randomStoryData.Items[randomStoryIndex].TimeStamp.N.toString();
-                    var author = randomStoryData.Items[randomStoryIndex].Author.S;
-                    randomStoryCallback(story, timeStamp, author);
-                }
-            });
+        getRandomStory: function (getRandomStoryCallback){
+             getRandomStories(1, null, function(stories, timeStamps, authors) {
+                 getRandomStoryCallback(stories[0], timeStamps[0], authors[0]);
+             });
         },
 
         /**
          * Gets "n" stories from a particular author
-         * @param numStories
+         * @param storyCountRequested
          * @param author
          * @param authorStoriesCallback
          */
-        getStoriesByAuthor: function (numStories, author, authorStoriesCallback){
-            //Declare parameters for use in scan. These scan for all stories in the database that are by the author
-            //given and have also been approved.
-            var getStoriesByAuthorParams = {
-                TableName: "MemoryJaneSixWordStories",
-                FilterExpression : "#thisauthor = :author AND #approved = :is_true",
-                ExpressionAttributeNames : { "#thisauthor" : "Author" , "#approved" : "Approved"},
-                ExpressionAttributeValues : { ":author" : {"S": author} , ":is_true" : {"BOOL": true}}
-            };
-
-            dynamodb.scan(getStoriesByAuthorParams, function (authorStoryErr, authorStoryData) {
-                if (authorStoryErr) throw ("Data_getStoriesByAuthor_ERROR " + authorStoryErr);
-                else {
-                    //Declare empty arrays for the story indexes, stories, timeStamps, and authors for population
-                    //in the for loops.
-                    var authorStoryIndexes = [];
-                    var stories = [];
-                    var timeStamps = [];
-                    var authors = [];
-
-                    //Fill the indexes array with unique random numbers between 0 and count-1.
-                    for (i = 0; i < numStories; i++){
-                        authorStoryIndexes[i] = (Math.floor(Math.random() *authorStoryData.Count));
-                        //Check the random number that was just inserted into the array to confirm that it is different
-                        //than all previous values. If not, decrement i to get a new value.
-                        for (j = 0; j < i; j++){
-                            if (authorStoryIndexes[i] == authorStoryIndexes[j]){
-                                i--;
-                            }
-                        }
-                    }
-
-                    //Once the index array has been filled, use it to fill the other three arrays with the stories,
-                    //timeStamps and authors at those indexes. Then callback the three arrays.
-                    for (i = 0; i < numStories; i++) {
-                        stories[i] = authorStoryData.Items[authorStoryIndexes[i]].Story.S;
-                        timeStamps[i] = authorStoryData.Items[authorStoryIndexes[i]].TimeStamp.N.toString();
-                        authors[i] = authorStoryData.Items[authorStoryIndexes[i]].Author.S;
-                    }
-                    authorStoriesCallback(stories, timeStamps, authors, authorStoryData.Count);
-                }
+        getStoriesByAuthor: function (storyCountRequested, author, authorStoriesCallback){
+            getRandomStories(storyCountRequested, author, function(stories, timeStamps, authors) {
+                authorStoriesCallback(stories, timeStamps, authors);
             });
         },
 
         /**
          * Gets a specific number of random stories and returns them.
-         * @param storyCount
+         * @param storyCountRequested
          * @param getRandomStoriesCallback
          */
-        getRandomStories: function (storyCount, getRandomStoriesCallback){
-            // We're looking for any stories that are approved..
-            var randomStoriesParams = {
-                TableName: "MemoryJaneSixWordStories",
-                FilterExpression : "#approved = :isTrue",
-                ExpressionAttributeNames : { "#approved" : "Approved" },
-                ExpressionAttributeValues : { ":isTrue" : {"BOOL":true} }
-            };
-
-            // Get the stories.
-            dynamodb.scan(randomStoriesParams, function (randomStoriesErr, randomStoriesData) {
-                if (randomStoriesErr) throw ("Data_getRandomStories_ERROR " + randomStoriesErr);
-                else {
-                    // Declare empty arrays for the story indexes, stories, timeStamps, and authors.
-                    var stories = [];
-                    var timeStamps = [];
-                    var authors = [];
-
-                    // If there are more stories available than were requested, we need to do a
-                    // quick shuffling of the stories. We can do it directly in the Items array.
-                    if (randomStoriesData.Items.length > storyCount) {
-                        // We only need to shuffle to storyCount since we're only going to take that many
-                        // items when we return the array..
-                        for (i = 0; i < storyCount; i++) {
-                            var randomIndex = Math.floor(Math.random() * randomStoriesData.Items.length);
-                            var tempItem = randomStoriesData.Items[i];
-                            randomStoriesData.Items[i] = randomStoriesData.Items[randomIndex];
-                            randomStoriesData.Items[randomIndex] = tempItem;
-                        }
-
-                        // Now, slice the array so that only the right number of items get returned.
-                        randomStoriesData.Items = randomStoriesData.Items.slice(0, storyCount);
-                    }
-
-                    // Now put all the items into the data arrays for passback.
-                    for (i = 0; i < randomStoriesData.Items.length; i++) {
-                        stories.push(randomStoriesData.Items[i].Story.S);
-                        timeStamps.push(randomStoriesData.Items[i].TimeStamp.N.toString());
-                        authors.push(randomStoriesData.Items[i].Author.S);
-                    }
-
-                    getRandomStoriesCallback(stories, timeStamps, authors);
-                }
+        getRandomStories: function (storyCountRequested, getRandomStoriesCallback){
+            getRandomStories(storyCountRequested, function(stories, timeStamps, authors) {
+                getRandomStoriesCallback(stories, timeStamps, authors);
             });
         },
 
