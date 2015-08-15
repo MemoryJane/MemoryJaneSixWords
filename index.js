@@ -305,7 +305,7 @@ var sixWords = (function () {
                 data.doesStoryMatchTheme(story, function(doesStoryMatchTheme, themeText) {
                     var remixAuthorId;
                     if (session.attributes.isRemix){
-                        remixAuthorId = session.attributes.author;
+                        remixAuthorId = session.attributes.Author;
                     }
                     data.putNewStory(userId, story, themeText, remixAuthorId, function(timeStamp, putStoryError) {
                         // Remove the story from the session attributes, reset to thinking about creating.
