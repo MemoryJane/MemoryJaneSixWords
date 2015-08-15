@@ -37,7 +37,7 @@ var data = (function () {
             +((rightNow.getUTCHours()+1)*10000000)
             +(rightNow.getUTCDate()*1000000000)
             +((rightNow.getUTCMonth()+1)*100000000000)
-            +(rightNow.getUTCFullYear()*100000000000000);
+            +(rightNow.getUTCFullYear()*10000000000000);
     }
 
     return {
