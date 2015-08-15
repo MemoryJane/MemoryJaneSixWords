@@ -309,12 +309,16 @@ var sixWords = (function () {
                 data.doesStoryMatchTheme(story, function(doesStoryMatchTheme, themeText) {
                     var remixAuthorId;
                     if (session.attributes.isRemix){
-                        remixAuthorId = session.attributes.Author;
+                        remixAuthorId = session.attributes.recentStoryIndex;
                     }
                     data.putNewStory(userId, story, themeText, remixAuthorId, function(timeStamp, putStoryError) {
                         // Remove the story from the session attributes, reset to thinking about creating.
                         session.attributes.storyState = "ThinkingAboutCreating";
                         data.putUserActivity(userId, timeStamp, "Create", function callback() { });
+
+                        var news = script.getScript("NewsPreamble", "YouGotRemixed", 0);
+                        news = news.replace("%1", session.attributes.storyJustHeard)+" "+session.attributes.userStory;
+                        data.addNews(session.attributes.Author, news, function(){});
 
                         // EASTER EGG - the six banana story gets a bad ass reaction.
                         if (story == "banana banana banana banana banana banana"){
@@ -387,7 +391,7 @@ var sixWords = (function () {
                         session.attributes.recentStoryIndex = timeStamps[0];
                         session.attributes.storyState = "JustHeardAStory";
                         session.attributes.Author = authors[0];
-                        session.attributes.storyJustHeard= stories[0];
+                        session.attributes.storyJustHeard = stories[0];
                         data.putUserActivity(session.user.userId, timeStamps[0], "More", function callback() { });
 
                         var storiesConcat = "";

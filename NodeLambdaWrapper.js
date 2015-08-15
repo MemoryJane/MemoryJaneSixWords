@@ -36,6 +36,7 @@ function runTests(filename, number) {
         });
     } catch (error) {
         console.log("\n No more tests.");
+        console.log(error);
     }
 }
 

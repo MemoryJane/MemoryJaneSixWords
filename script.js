@@ -8,19 +8,28 @@ var script = (function () {
         LaunchRequest_Reaction: "Welcome to Six Word Stories.",
         LaunchRequest_Instruction: "You can say tell me a story to hear an awesome little six-word story.",
 
+        LaunchRequestThemePrompt_VerbosityKey: { "NOVICE": 10, "MEDIUM": 20 },
         LaunchRequestThemePrompt_Reaction: "Welcome to Six Word Stories.",
-        LaunchRequestThemePrompt_Instruction: "We have a theme to our stories today. We're encouraging fans to " +
+        LaunchRequestThemePrompt_NOVICE_Instruction: "We have a theme to our stories today. We're encouraging fans to " +
+        "publish a story that %1. Would you like to hear a few of these stories?",
+        LaunchRequestThemePrompt_MEDIUM_Instruction: "We have a theme to our stories today. We're encouraging fans to " +
+        "publish a story that %1. Would you like to hear a few of these stories?",
+        LaunchRequestThemePrompt_EXPERT_Instruction: "We have a theme to our stories today. We're encouraging fans to " +
         "publish a story that %1. Would you like to hear a few of these stories?",
 
-        GivenNews_Reaction: "Welcome back! You have news.",
+        GivenNews_Reaction: [
+            "Welcome back! You have news.",
+            "Good to see you again! You have news",
+            "I'm glad you're back! It seems you have some news"],
         GivenNews_Instruction: "Would you like to hear your news?",
         GivingNews_Reaction: "%1.",
         GivingNews_Instruction: "You can say tell me a story to hear a story or publish to write your own. " +
         "Which would you like to do?",
         NewsPreamble_YouGotAComment: "You received a comment. %1. On your story.",
         NewsPreamble_YouGotAnUpVote: "You received a plus one on your story.",
+        NewsPreamble_YouGotRemixed: "Your story. %1. Was remixed to.",
 
-        ListenIntentAndBlank_VerbosityKey: { "NOVICE": 5, "MEDIUM": 10 },
+        ListenIntentAndBlank_VerbosityKey: { "NOVICE": 5, "MEDIUM": 20 },
         ListenIntentAndBlank_Reaction: "%1 .",
         ListenIntentAndBlank_NOVICE_Instruction: "If you liked that story, you can say, plus one. " +
         "Or you can say tell me a story to hear another story.",
@@ -32,7 +41,10 @@ var script = (function () {
             "What would you like to do now?"],
 
         ListenIntentRemixesAndBlank_Reaction: "%1 .",
-        ListenIntentRemixesAndBlank_Instruction: "This story has remixes! To hear the remixes say yes.",
+        ListenIntentRemixesAndBlank_Instruction: [
+            "This story has remixes! To hear the remixes say yes.",
+            "Awesome, this story has remixes! To hear the remixes say yes",
+            "Did you know that this story has been remixed? To hear the remixes say yes"],
 
         ListenIntentMultipleStoriesBadCountAndBlank_Reaction: "Oops. I heard you ask for %1 stories, but I can " +
         "only tell you five stories at a time, maximum.",
@@ -76,9 +88,14 @@ var script = (function () {
         CreateIntentThemePrompt_Instruction: "Say publish followed by any six words. And if you want to follow the" +
         "theme, make sure your story %1.",
 
+        CreateIntentBadStoryAndBlank_VerbosityKey: { "NOVICE": 5, "MEDIUM": 20 },
         CreateIntentBadStoryAndBlank_Reaction: [ "Oops.", "Shoot.", "Whoops.", "Darn" ],
-        CreateIntentBadStoryAndBlank_Instruction: "I heard you try to publish the following story: %1. " +
+        CreateIntentBadStoryAndBlank_NOVICE_Instruction: "I heard you try to publish the following story: %1. " +
         "But our stories require exactly 6 words. Try again. Say publish followed by your six words.",
+        CreateIntentBadStoryAndBlank_MEDIUM_Instruction: "I heard you try to publish the following story: %1. " +
+        "Try again. Say publish followed by your six words.",
+        CreateIntentBadStoryAndBlank_EXPERT_Instruction: "I heard you try to publish the story: %1. " +
+        "Try again.",
 
         CreateIntentGoodStoryAndBlank_Reaction: [ "Cool!", "Sweet!", "Bingo!", "Great story!" ],
         CreateIntentGoodStoryAndBlank_Instruction:[
@@ -104,7 +121,7 @@ var script = (function () {
 
         CreateIntentGoodStoryWithRemixPlusThemeAndBlank_Reaction: [
             "I can't believe it. That was a crazy remix and you matched our theme. Impressive!",
-            "That was a crazy awesome remix and you matched our theme. Great job!"],
+            "That was an impressive remix and you matched our theme. Great job!"],
         CreateIntentGoodStoryWithRemixPlusThemeAndBlank_Instruction: [
             "I just want to confirm I heard it right. Did you say %1?",
             "I just want to make sure I heard that right. Did you say %1?",
@@ -114,7 +131,8 @@ var script = (function () {
         YesIntent_Reaction: [
             "Coolio! Your story is saved. I can't wait for other people to hear it.",
             "Coolio! I got your story and I'll share it with other users.",
-            "Coolio! You're published." ],
+            "Coolio! You're published.",
+            "Coolio! That was an awesome story, everyone is going to love it"],
         YesIntent_NOVICE_Instruction: "What would you like to do next? You can say publish to publish a story " +
         "or say tell me a story to hear a story.",
         YesIntent_MEDIUM_Instruction: "What would you like to do next? You can publish another story or say tell me a story.",
@@ -128,7 +146,11 @@ var script = (function () {
         YesIntentHearThemeStories_EXPERT_Instruction: "What would you like to do next?",
 
         YesIntentHearRemixes_VerbosityKey: { "NOVICE": 5, "MEDIUM": 20 },
-        YesIntentHearRemixes_Reaction: "Cool beans, here's some theme remixes for you. . %1",
+        YesIntentHearRemixes_Reaction: [
+            "Cool beans! Here are some theme remixes for you. . %1",
+            "Hot tacos! Here are some theme remixes for you. . %1",
+            "Lukewarm enchiladas! Here are some theme remixes for you. . %1",
+            "Blazing hot burritos! Here are some theme remixes for you. . %1"],
         YesIntentHearRemixes_NOVICE_Instruction: "What would you like to do next? You can say publish to publish a story " +
         "or say tell me a story to hear a story.",
         YesIntentHearRemixes_MEDIUM_Instruction: "What would you like to do next? You can publish another story or say tell me a story.",
@@ -150,7 +172,8 @@ var script = (function () {
         NoIntentNews_Reaction: [
             "No problem.",
             "I agree, who needs news?",
-            "Okay, no news for you."],
+            "Okay, no news for you.",
+            "Good choice, ain't nobody got time for news"],
         NoIntentNews_Instruction: "You can say tell me a story to hear a story or publish to write your own. " +
         "Which would you like to do?",
         NoIntentHearThemeStories_Reaction: [
