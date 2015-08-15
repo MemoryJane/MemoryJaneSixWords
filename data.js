@@ -277,9 +277,9 @@ var data = (function () {
         /**
          * Get reactions for the story that the user just listened to
          * @param storyId
-         * @param callback
+         * @param storyReactionCallback
          */
-        getLatestStoryReactions: function (storyId, callback){
+        getLatestStoryReactions: function (storyId, storyReactionCallback){
             //Declare parameters for use in query. These find all reactions in the table associated with the specific
             //storyId.
             var storyReactionParams = {
@@ -304,14 +304,14 @@ var data = (function () {
                     //If no items were returned, the story had no reactions so return undefined. Otherwise, callback
                     //all of the reactions to the story in array format.
                     if (count == 0) {
-                        callback(undefined);
+                        storyReactionCallback(undefined);
                     }
                     else{
                         var reactions = [];
                         for (i = 0; i < count; i++) {
                             reactions[i] = storyReactionData.Items[i].Reaction.S;
                         }
-                        callback(reactions);
+                        storyReactionCallback(reactions);
                     }
                 }
             });

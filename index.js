@@ -96,19 +96,21 @@ var sixWords = (function () {
                     var scriptKey = "ListenIntentMultipleStoriesBadCountAndBlank";
                     alexaSpeak(scriptKey, intent.slots.NumberStoriesRequested.value, session, context, false);
                 } else {
+                    //Get a number of stories equal to the number that the user requested
                     data.getRandomStories(storyCountRequested, function(stories, timeStamps, authors) {
                         var storiesConcat = "";
                         for (i = 0; i < stories.length; i++) { storiesConcat += stories[i]+" . . "; }
+                        session.attributes.storyState = "JustHeardAStory";
                         alexaSpeak("ListenIntentMultipleStoriesAndBlank", storiesConcat, session, context, false);
                     });
                 }
             } else {
                 // Nope, didn't ask for a specific number of stories so, just get them a single story.
-                data.getRandomStory(function (nextStory, timeStamp, author) {
+                data.getRandomStory(function (storyJustHeard, timeStamp, author) {
                     // Save the story index to make sure we know which story was read.
                     session.attributes.recentStoryIndex = timeStamp;
                     session.attributes.Author = author;
-                    session.attributes.nextStory = nextStory;
+                    session.attributes.storyJustHeard = storyJustHeard;
 
                     data.putUserActivity(session.user.userId, timeStamp, "Listen", function callback() { });
 
@@ -116,11 +118,11 @@ var sixWords = (function () {
                         if (areThereRemixes){
                             // If at least 1 remix, have Alexa read the story and ask if they want to hear remixes
                             session.attributes.storyState = "PromptedForRemixes";
-                            alexaSpeak("ListenIntentRemixesAndBlank", nextStory, session, context, false);
+                            alexaSpeak("ListenIntentRemixesAndBlank", storyJustHeard, session, context, false);
                         }else{
                             // If no remixes have Alexa read the story and ask if they want to up vote it.
                             session.attributes.storyState = "JustHeardAStory";
-                            alexaSpeak("ListenIntentAndBlank", nextStory, session, context, false);
+                            alexaSpeak("ListenIntentAndBlank", storyJustHeard, session, context, false);
                         }
                     });
                 });
@@ -151,7 +153,7 @@ var sixWords = (function () {
                 data.putUserActivity(session.user.userId, session.attributes.recentStoryIndex, "Upvote", function callback() { });
 
                 // Okay, now we can increment the story rating.
-                data.incrementStoryRating(session.attributes.recentStoryIndex, function (incrementError) {
+                data.incrementStoryRating(session.attributes.recentStoryIndex, function () {
                     // Up vote done, now clear out the state and prepare the response.
                     session.attributes.storyState = undefined;
 
@@ -161,7 +163,7 @@ var sixWords = (function () {
                         var storyId = session.attributes.recentStoryIndex;
                         data.addStoryReaction(reaction, storyId, userId, function() {
                             var news = script.getScript("NewsPreamble", "YouGotAComment", 0);
-                            news = news.replace("%1", reactionResponse)+" "+session.attributes.nextStory;
+                            news = news.replace("%1", reactionResponse)+" "+session.attributes.storyJustHeard;
                             data.addNews(session.attributes.Author, news, function(){
                                 alexaSpeak("UpVoteIntentAndBlank", reactionResponse, session, context, false);
                             });
@@ -170,7 +172,7 @@ var sixWords = (function () {
                         // No reaction? No problem, just send the up vote response. Have to include the insert
                         // text because this script key has an insert.
                         var news = script.getScript("NewsPreamble", "YouGotAnUpVote", 0);
-                        news += " "+session.attributes.nextStory;
+                        news += " "+session.attributes.storyJustHeard;
                         data.addNews(session.attributes.Author, news, function(){
                             alexaSpeak("UpVoteIntentAndBlank", " ", session, context, false);
                         });
@@ -185,7 +187,7 @@ var sixWords = (function () {
                 alexaSpeak("BadState", null, session, context, false);
             } else {
                 // The user wants to hear the reactions for the most recent story.
-                data.getLatestStoryReactions(session.attributes.recentStoryIndex, function(reactions, getReactionsError){
+                data.getLatestStoryReactions(session.attributes.recentStoryIndex, function(reactions){
                     // Were there any reactions for this story?
                     if (!reactions) {
                         // Nope, let the user down easy, and tell them how to be the first to react.
@@ -248,7 +250,7 @@ var sixWords = (function () {
                     //Determine if the story was a remix
                     var notMatching = 0;
                     var matches = true;
-                    var storyJustHeard = session.attributes.nextStory.split(" ");
+                    var storyJustHeard = session.attributes.storyJustHeard.split(" ");
 
                     for (i = 0; i < userStoryArrayWithoutPunctuation.length; i++){
                         if (userStoryArrayWithoutPunctuation[i] != storyJustHeard[i]){
@@ -376,12 +378,12 @@ var sixWords = (function () {
                         //If the user only has one story, no point in giving it again.
                         alexaSpeak("MoreIntentOneStory", null, session, context, false);
                     }else{
-                        // Have Alexa say those stories and have the user say "more" if they want more
+                        // Have Alexa say those stories and have the user say "more" if they want more.
                         // Save the story index to make sure we know which story was read.
                         session.attributes.recentStoryIndex = timeStamps[0];
                         session.attributes.storyState = "JustHeardAStory";
                         session.attributes.Author = authors[0];
-                        session.attributes.nextStory = stories[0];
+                        session.attributes.storyJustHeard= stories[0];
                         data.putUserActivity(session.user.userId, timeStamps[0], "More", function callback() { });
 
                         var storiesConcat = "";
