@@ -100,6 +100,10 @@ var sixWords = (function () {
                     data.getRandomStories(storyCountRequested, function(stories, timeStamps, authors) {
                         var storiesConcat = "";
                         for (i = 0; i < stories.length; i++) { storiesConcat += stories[i]+" . . "; }
+
+                        session.attributes.recentStoryIndex = timeStamps[stories.length-1];
+                        session.attributes.Author = authors[stories.length-1];
+                        session.attributes.storyJustHeard = stories[stories.length-1];
                         session.attributes.storyState = "JustHeardAStory";
                         alexaSpeak("ListenIntentMultipleStoriesAndBlank", storiesConcat, session, context, false);
                     });

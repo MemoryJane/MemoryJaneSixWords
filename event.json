@@ -23,12 +23,13 @@
   },
   "request": {
     "type": "IntentRequest",
-    "requestId": "MoreIntent",
+    "requestId": "ListenIntent",
     "timestamp": "2015-05-13T12:34:56Z",
     "intent": {
-      "name": "MoreIntent",
+      "name": "ListenIntent",
       "slots": {
-        "Story" : { "value": "banana banana test test test test" }
+        "Story" : { "value": "banana banana test test test test" },
+        "NumberStoriesRequested" : { "value" : "three"}
       }
     }
   }

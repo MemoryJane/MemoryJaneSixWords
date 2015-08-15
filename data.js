@@ -47,7 +47,7 @@ var data = (function () {
     /**
      *
      */
-    function getRandomStories(storyCountRequested, author, getRandomStoriesCallback) {
+    function getRandomStories(storyCountRequested, getRandomStoriesCallback, author) {
         // We're looking for any stories that are approved..
         var randomStoriesParams = {
             TableName: "MemoryJaneSixWordStories",
@@ -56,7 +56,7 @@ var data = (function () {
             ExpressionAttributeValues : { ":isTrue" : {"BOOL":true} }
         };
 
-        // If there's an author passed in, add the limitation tot he params.
+        // If there's an author passed in, add the limitation to the params.
         if(author) {
             randomStoriesParams.FilterExpression += " AND #thisauthor = :author";
             randomStoriesParams.ExpressionAttributeNames["#thisauthor"] = "Author";
