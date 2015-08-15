@@ -47,7 +47,7 @@ var data = (function () {
     /**
      *
      */
-    function getRandomStories(storyCountRequested, getRandomStoriesCallback, author) {
+    function getRandomStories(storyCountRequested, author, getRandomStoriesCallback) {
         // We're looking for any stories that are approved..
         var randomStoriesParams = {
             TableName: "MemoryJaneSixWordStories",
@@ -163,7 +163,7 @@ var data = (function () {
          * @param getRandomStoriesCallback
          */
         getRandomStories: function (storyCountRequested, getRandomStoriesCallback){
-            getRandomStories(storyCountRequested, function(stories, timeStamps, authors) {
+            getRandomStories(storyCountRequested, null, function(stories, timeStamps, authors) {
                 getRandomStoriesCallback(stories, timeStamps, authors);
             });
         },
