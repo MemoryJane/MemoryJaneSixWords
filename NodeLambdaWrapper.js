@@ -40,7 +40,7 @@ function runTests(filename, number) {
 }
 
 // Get the name of the event.json to run.
-var eventFileName = null;;
+var eventFileName = null;
 for (i = 0; i < process.argv.length; i++) {
     if (process.argv[i].search(".json") != -1) {
         // Found one. Save it and drop out of the for loop.
