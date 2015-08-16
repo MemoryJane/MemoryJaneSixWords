@@ -1,5 +1,5 @@
 /**
- * THis is the data object, used for all communications with the DB.
+ * This is the data object, used for all communications with the DB.
  * It follows the Module pattern.
  */
 var data = (function () {
