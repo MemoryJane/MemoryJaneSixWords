@@ -18,17 +18,17 @@
       "storyState": "JustHeardAStory",
       "Author": "amzn1.account.AFM2SDUDN23KH6MJHROQVWCIW3IA",
       "userId": "amzn1.account.AFM2SDUDN23KH6MJHROQVWCIW3IA",
-      "nextStory": "banana banana test test test banana"
+      "storyJustHeard": "banana banana test test test banana"
     }
   },
   "request": {
     "type": "IntentRequest",
-    "requestId": "MoreIntent",
+    "requestId": "CreateIntent",
     "timestamp": "2015-05-13T12:34:56Z",
     "intent": {
-      "name": "MoreIntent",
+      "name": "CreateIntent",
       "slots": {
-        "Story" : { "value": "banana banana test test test test" }
+        "Story" : { "value": "banana banana ostrich test test goat" }
       }
     }
   }

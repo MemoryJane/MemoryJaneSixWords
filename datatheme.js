@@ -103,20 +103,48 @@ var dataTheme = ( function () {
                     // Nope. Return false.
                     doesStoryMatchThemeCallback(false, null);
                 } else {
-                    // Yep. Let's check to see if the rule is met.
+                    // Yep. We have two kinds of rules - has to have the word(s) and has to have the word(s)
+                    // in a certain position. Let's see which one it is.
+                    var success = true;
+                    var themeText = todaysTheme.ThemeText.S;
                     var ruleWords = todaysTheme.ThemeRule.S.split(" ");
                     var storyWords = story.split(" ");
 
-                    var success = true;
-                    var themeText = todaysTheme.ThemeText.S;
-                    for (i = 0; i < storyWords.length; i++) {
-                        // If the ruleWord isn't a wild card, and it's not equal to the storyWord, we fail.
-                        if (ruleWords[i] != "*" && ruleWords[i] != storyWords[i]) {
-                            success = false;
-                            themeText = null;
-                            i = storyWords.length;
+                    // If it has an asterisk, than it is words in a specific order.
+                    if (todaysTheme.ThemeRule.S.indexOf("*") != -1) {
+                        // Look through each story word and match it with the rule words.
+                        for (i = 0; i < storyWords.length; i++) {
+                            // If the ruleWord isn't a wild card, and it's not equal to the storyWord, we fail.
+                            if (ruleWords[i] != "*" && ruleWords[i] != storyWords[i]) {
+                                success = false;
+                                themeText = null;
+                                i = storyWords.length;
+                            }
+                        }
+                    } else {
+                        // No asterisk, so it's words in any order. Assume we're going to fail.
+                        success = false;
+                        themeText = null;
+
+                        // Loop through both the story and rule words to see how many matches we have.
+                        for (i = 0; i < storyWords.length; i++) {
+                            for (j = 0; j < ruleWords.length; j++) {
+                                if (storyWords[i] == ruleWords[j]) {
+                                    // If we have a match, remove the rule word from the rule words array
+                                    // and move on to the next story word.
+                                    ruleWords.splice(j, 1);
+                                    j = ruleWords.length;
+                                }
+                            }
+                            // If ruleWords is empty, then we're done, and it was a success.
+                            if (ruleWords.length == 0) {
+                                i = storyWords.length;
+                                success = true;
+                                themeText = todaysTheme.ThemeText.S;
+                            }
                         }
                     }
+
                     doesStoryMatchThemeCallback(success, themeText);
                 }
             });
