@@ -301,8 +301,9 @@ var sixWords = (function () {
 
             if (storyState == "GivenNewsPrompt"){
                 //If the user was told that they have news and they said yes, give them the news
+                session.attributes.storyState = undefined;
                 data.getNews(userId, function(news){
-                    alexaSpeak("GivingNews", session.attributes.News, session, context, false);
+                    alexaSpeak("GivingNews", news, session, context, false);
                 });
             } else if (storyState == "JustCreatedAStory") {
                 // We just heard a story and we heard it right, so store it in the DB
@@ -412,7 +413,16 @@ var sixWords = (function () {
             } else if (session.attributes.storyState == "JustCreatedAStory") {
                 //If the user just created a story, give them a help message asking them to confirm their story
                 alexaSpeak("HelpIntentCreatedAndBlank", session.attributes.userStory, session, context, false);
-            } else {
+            }else if (session.attributes.storyState == "GivenNewsPrompt") {
+                //If the user was prompted that they had news, give them a help message asking for their response
+                alexaSpeak("HelpIntentNewsPrompt", null, session, context, false);
+            }else if (session.attributes.storyState == "JustAskedToHearThemeStories"){
+                //If the user was prompted to hear theme stories, give them a help message asking for their response
+                alexaSpeak("HelpIntentThemeStories", null, session, context, false);
+            } else if (session.attributes.storyState == "PromptedForRemixes"){
+                //If the user was prompted to hear remixes, give them a help message asking for their response
+                alexaSpeak("HelpIntentRemixPrompt", null, session, context, false);
+            }else {
                 //If the user just entered the session, give them a generic help message
                 alexaSpeak("HelpIntent", null, session, context, false);
             }
