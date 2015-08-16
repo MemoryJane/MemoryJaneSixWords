@@ -1,5 +1,5 @@
 {
-  "userQuote": "Hey Alexa. Tell Six Words to tell me a story.",
+  "userQuote": "Plus one.    (SHOULD FAIL)",
   "version": "1.0",
   "session": {
     "new": true,
@@ -13,10 +13,10 @@
   },
   "request": {
     "type": "IntentRequest",
-    "requestId": "ListenIntent",
+    "requestId": "UpVoteIntent",
     "timestamp": "2015-05-13T12:34:56Z",
     "intent": {
-      "name": "ListenIntent"
+      "name": "UpVoteIntent"
     }
   }
 }

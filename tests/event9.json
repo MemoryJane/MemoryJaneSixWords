@@ -1,5 +1,5 @@
 {
-  "userQuote": "Hey Alexa. Tell Six Words to tell me a story.",
+  "userQuote": "Tell me a story.",
   "version": "1.0",
   "session": {
     "new": true,

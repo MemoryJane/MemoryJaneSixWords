@@ -12,6 +12,17 @@ nodeLambda.run = function (program, runWithTheseAttributes, callback) {
     var handler = require(process.cwd() + '/' + filename)[handlername];
     var event = fs.readJSONSync(process.cwd() + '/event.json');
 
+    // If there is a placeholder in the event for a random word, we'll load the adjectives and insert one.
+    var eventString = JSON.stringify(event);
+    if (eventString.search("%random%") != -1) {
+        // There is a random to replace, let's go get our random words JSON.
+        var adjectives = fs.readJSONSync(process.cwd() + '/tests/adjectives.json');
+        var randomWord = adjectives[Math.floor(Math.random() * adjectives.length)];
+
+        eventString = eventString.replace(/%random%/gi, randomWord);
+        event = JSON.parse(eventString);
+    }
+
     // If there are some attributes passed in, they're from the previous test, so add them to the event.
     if (runWithTheseAttributes) {
         event.session.attributes = runWithTheseAttributes;
@@ -40,9 +51,9 @@ nodeLambda._runHandler = function (handler, event, callback) {
 
 // This is a recursive function to call nodeLambda run on a series of test files.
 function runTests(filename, number, runWithTheseAttributes) {
-    console.log("\n");
     try {
         fs.copySync(filename.replace("#",number), './event.json');
+        console.log("\nTest "+filename.replace("#",number));
         nodeLambda.run({"handler":"index.handler"}, runWithTheseAttributes, function(success, sessionAttributes) {
             // If this is a series, call this recursively until I run out of numbered files.
             if(filename.search("#") != -1) runTests(filename, number+1, sessionAttributes);
