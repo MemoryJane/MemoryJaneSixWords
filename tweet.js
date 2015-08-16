@@ -11,6 +11,8 @@ var twitterConfig = {
 
 var T = new Twit(twitterConfig);
 
+
+
 T.post('statuses/update', { status: "Hello World!" }, function(err, data, response) {
     console.log(data)
 });
