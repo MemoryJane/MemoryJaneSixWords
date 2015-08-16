@@ -172,9 +172,10 @@ var data = (function () {
          * @param story
          * @param themeText
          * @param remixId
+         * @param chainId
          * @param putStoryCallback
          */
-        putNewStory: function (author, story, themeText, remixId, putStoryCallback){
+        putNewStory: function (author, story, themeText, remixId, chainId, putStoryCallback){
             //Declare parameters for use in putItem. These put a new story into the database at an initial rating of
             //zero, a TimeStamp equal to the current time, Author as the user's userId and Story as the story that
             //they said to publish.
@@ -194,6 +195,9 @@ var data = (function () {
 
             // If the story is a remix, add the storyId of the story it remixed to the record.
             if (remixId) newStoryParams.Item.RemixId = { "S" : remixId };
+
+            // If the story is designated to be chained, put its TimeStamp in the ChainId
+            if (chainId) newStoryParams.Item.ChainId = { "N" : chainId };
 
             dynamodb.putItem(newStoryParams, function (putStoryErr, putStoryData) {
                 if (putStoryErr) throw ("Data_putNewStory_ERROR " + putStoryErr);
@@ -469,11 +473,9 @@ var data = (function () {
             dynamodb.scan(areThereRemixesParams, function (remixesErr, remixesData) {
                 if (remixesErr) throw ("Data_areThereRemixes_ERROR " + remixesErr);
                 else {
-                    var remix;
+                    var remix = false;
                     if (remixesData.Count > 0){
                         remix = true;
-                    }else{
-                        remix = false;
                     }
                     areThereRemixesCallback(remix);
                 }
@@ -502,6 +504,107 @@ var data = (function () {
                     }
                     getRemixesCallback(remixes);
                 }
+            });
+        },
+
+        /**
+         * Checks if the story is part of a chain
+         * @param chainId
+         * @param partOfChainCallback
+         */
+        isPartOfChain: function (chainId, partOfChainCallback){
+            var isPartOfChainParams = {
+                TableName: "MemoryJaneSixWordStories",
+                FilterExpression : "#chainId = :storyId",
+                ExpressionAttributeNames : { "#chainId" : "ChainId" },
+                ExpressionAttributeValues : { ":storyId" : {"N":chainId.toString()} }
+            };
+            dynamodb.scan(isPartOfChainParams, function (chainErr, chainData) {
+                if (chainErr) throw ("Data_isPartOfChain_ERROR " + chainErr);
+                else {
+                    var chain = false;
+                    if (chainData.Count > 1){
+                        chain = true;
+                    }
+                    partOfChainCallback(chain);
+                }
+            });
+        },
+
+        /**
+         * Assembles the chain of words given the chainId
+         * @param chainId
+         * @param partOfChainCallback
+         */
+        assembleChain: function (chainId, partOfChainCallback){
+            var assembleChainParams = {
+                TableName: "MemoryJaneSixWordStories",
+                FilterExpression : "#chainId = :storyId",
+                ExpressionAttributeNames : { "#chainId" : "ChainId" },
+                ExpressionAttributeValues : { ":storyId" : {"N":chainId.toString()} }
+            };
+            dynamodb.scan(assembleChainParams, function (chainErr, chainData) {
+                if (chainErr) throw ("Data_assembleChain_ERROR " + chainErr);
+                else {
+                    var concatChain = "";
+                    var concatChainArr = [];
+                    concatChainArr[0] = 0;
+                    for (i = 1; i < chainData.Count; i++){
+                        for (k = 0; k < concatChainArr.length; k++){
+                            if (chainData.Items[i].TimeStamp.N < chainData.Items[k].TimeStamp.N){
+                                concatChainArr.splice(k, 0, i);
+                                k = concatChainArr.length + 1;
+                            }
+                            if (k == concatChainArr.length-1){
+                                concatChainArr.splice(k+1, 0, i);
+                            }
+                        }
+                    }
+                    for (j = 0; j < chainData.Count; j++){
+                        concatChain += chainData.Items[concatChainArr[j]].Story.S + ". ";
+                    }
+                    partOfChainCallback(concatChain);
+                }
+            });
+        },
+
+        /**
+         * Checks if the story has been designated for chaining
+         * @param storyId
+         * @param canChainCallback
+         */
+        canChain: function (storyId, canChainCallback){
+            var canChainParams = {
+                TableName: "MemoryJaneSixWordStories",
+                FilterExpression : "#chainId = :storyId",
+                ExpressionAttributeNames : { "#chainId" : "TimeStamp" },
+                ExpressionAttributeValues : { ":storyId" : {"N":storyId.toString()} }
+            };
+            dynamodb.scan(canChainParams, function (chainErr, chainData) {
+                if (chainErr) throw ("Data_canChain_ERROR " + chainErr);
+                else {
+                    var canChain = false;
+                    if (chainData.Items[0].ChainId &&
+                        (chainData.Items[0].TimeStamp.N == chainData.Items[0].ChainId.N)){
+                        canChain = true;
+                    }
+                    canChainCallback(canChain);
+                }
+            });
+        },
+
+        designateForChaining: function(storyId, designateForChainingCallback){
+            var chainingParams = {
+                TableName : "MemoryJaneSixWordStories",
+                Key : { TimeStamp : { "N": storyId } },
+                UpdateExpression : "SET #ChainId = :storyId",
+                ExpressionAttributeNames : { "#ChainId" : "ChainId" },
+                ExpressionAttributeValues : { ":storyId" : {"N":storyId.toString()} }
+            };
+
+            dynamodb.updateItem(chainingParams, function (chainingErr, chainingData) {
+                if (chainingErr) throw ("Data_designateForChaining_ERROR " + chainingErr);
+                else designateForChainingCallback();
             });
         },
 

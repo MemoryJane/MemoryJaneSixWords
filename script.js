@@ -41,6 +41,12 @@ var script = (function () {
             "Awesome, this story has remixes! To hear the remixes say yes",
             "Did you know that this story has been remixed? To hear the remixes say yes"],
 
+        ListenIntentChainAndBlank_Reaction: "%1 .",
+        ListenIntentChainAndBlank_Instruction: [
+            "This story is part of a chain! To hear the chain say yes.",
+            "Awesome, this story is part of a chain! To hear the chain say yes",
+            "Did you know that this story is part of a chain? To hear the chain say yes"],
+
         ListenIntentMultipleStoriesBadCountAndBlank_Reaction: "Oops. I heard you ask for %1 stories, but I can " +
         "only tell you five stories at a time, maximum.",
         ListenIntentMultipleStoriesBadCountAndBlank_Instruction: "Try saying tell me one to five stories.",
@@ -130,7 +136,8 @@ var script = (function () {
             "Coolio! That was an awesome story, everyone is going to love it."],
         YesIntent_NOVICE_Instruction: "What would you like to do next? You can say publish to publish a story " +
         "or say tell me a story to hear a story.",
-        YesIntent_MEDIUM_Instruction: "What would you like to do next? You can publish another story or say tell me a story.",
+        YesIntent_MEDIUM_Instruction: "You can publish another story or say tell me a story. Additionally, you can " +
+        "say yes to make your story open to chaining by other users. What would you like to do next? ",
         YesIntent_EXPERT_Instruction: "What would you like to do next?",
 
         YesIntentHearThemeStories_VerbosityKey: { "NOVICE": 5, "MEDIUM": 20 },
@@ -139,6 +146,14 @@ var script = (function () {
         "or say tell me a story to hear a story.",
         YesIntentHearThemeStories_MEDIUM_Instruction: "What would you like to do next? You can publish another story or say tell me a story.",
         YesIntentHearThemeStories_EXPERT_Instruction: "What would you like to do next?",
+
+        YesIntentGiveChain_Reaction: "Sweet, here's that chain of stories. . %1",
+        YesIntentGiveChain_Instruction: "What would you like to do next? You can say publish to publish a story " +
+        "or say tell me a story to hear a story.",
+
+        YesIntentOpenForChaining_Reaction: "Cool, I've opened up your story to be chained.",
+        YesIntentOpenForChaining_Instruction: "What would you like to do next? You can say publish to publish a story " +
+        "or say tell me a story to hear a story.",
 
         YesIntentHearRemixes_VerbosityKey: { "NOVICE": 5, "MEDIUM": 20 },
         YesIntentHearRemixes_Reaction: [
@@ -179,7 +194,7 @@ var script = (function () {
         "your own. Which would you like to do?",
 
         MoreIntentHearStories_VerbosityKey: { "NOVICE": 5, "MEDIUM": 20 },
-        MoreIntentHearStories_Reaction: "Awesome sauce, here's another story from that author for you. . %1",
+        MoreIntentHearStories_Reaction: "Awesome sauce, here's another story from that author. . %1",
         MoreIntentHearStories_NOVICE_Instruction: "What would you like to do next? You can say more to hear another " +
         "from that author or say tell me a story to hear a story.",
         MoreIntentHearStories_MEDIUM_Instruction: "What would you like to do next? You can say more or say tell " +

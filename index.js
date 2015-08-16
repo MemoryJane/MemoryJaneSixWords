@@ -118,15 +118,22 @@ var sixWords = (function () {
                     data.putUserActivity(session.user.userId, timeStamp, "Listen", function callback() { });
 
                     data.areThereRemixes(timeStamp, function(areThereRemixes){
-                        if (areThereRemixes){
-                            // If at least 1 remix, have Alexa read the story and ask if they want to hear remixes
-                            session.attributes.storyState = "PromptedForRemixes";
-                            alexaSpeak("ListenIntentRemixesAndBlank", storyJustHeard, session, context, false);
-                        }else{
-                            // If no remixes have Alexa read the story and ask if they want to up vote it.
-                            session.attributes.storyState = "JustHeardAStory";
-                            alexaSpeak("ListenIntentAndBlank", storyJustHeard, session, context, false);
-                        }
+                        data.isPartOfChain(timeStamp, function(partOfChain) {
+                            if (areThereRemixes) {
+                                // If at least 1 remix, have Alexa read the story and ask if they want to hear remixes
+                                session.attributes.storyState = "PromptedForRemixes";
+                                alexaSpeak("ListenIntentRemixesAndBlank", storyJustHeard, session, context, false);
+                            } else {
+                                if (partOfChain){
+                                    session.attributes.storyState = "PromptedForChain";
+                                    alexaSpeak("ListenIntentChainAndBlank", storyJustHeard, session, context, false);
+                                }else{
+                                    // If no remixes have Alexa read the story and ask if they want to up vote it.
+                                    session.attributes.storyState = "JustHeardAStory";
+                                    alexaSpeak("ListenIntentAndBlank", storyJustHeard, session, context, false);
+                                }
+                            }
+                        });
                     });
                 });
             }
@@ -250,18 +257,23 @@ var sixWords = (function () {
                     session.attributes.storyState = "JustCreatedAStory";
                     session.attributes.userStory = userStory;
 
-                    //Determine if the story was a remix
-                    var notMatching = 0;
                     var matches = true;
-                    var storyJustHeard = session.attributes.storyJustHeard.split(" ");
+                    if (session.attributes.storyJustHeard){
+                        var notMatching = 0;
+                        matches = true;
+                        var storyJustHeard = session.attributes.storyJustHeard.split(" ");
 
-                    for (i = 0; i < userStoryArrayWithoutPunctuation.length; i++){
-                        if (userStoryArrayWithoutPunctuation[i] != storyJustHeard[i]){
-                            if (++notMatching > 1){
-                                matches = false;
-                                i = userStoryArrayWithoutPunctuation.length;
+                        for (i = 0; i < userStoryArrayWithoutPunctuation.length; i++){
+                            if (userStoryArrayWithoutPunctuation[i] != storyJustHeard[i]){
+                                if (++notMatching > 1){
+                                    matches = false;
+                                    i = userStoryArrayWithoutPunctuation.length;
+                                }
                             }
                         }
+                    }else{
+                        //Didn't just hear a story, can't be a remix
+                        matches = false;
                     }
                     session.attributes.isRemix = matches;
                     
@@ -311,19 +323,21 @@ var sixWords = (function () {
                     if (session.attributes.isRemix){
                         remixAuthorId = session.attributes.recentStoryIndex;
                     }
-                    data.putNewStory(userId, story, themeText, remixAuthorId, function(timeStamp, putStoryError) {
+                    data.putNewStory(userId, story, themeText, remixAuthorId, null, function(timeStamp, putStoryError) {
                         // Remove the story from the session attributes, reset to thinking about creating.
+                        session.attributes.recentTimeStamp = timeStamp;
                         session.attributes.storyState = "ThinkingAboutCreating";
                         data.putUserActivity(userId, timeStamp, "Create", function callback() { });
 
                         var news = script.getScript("NewsPreamble", "YouGotRemixed", 0);
                         news = news.replace("%1", session.attributes.storyJustHeard)+" "+session.attributes.userStory;
-                        data.addNews(session.attributes.Author, news, function(){});
+                        //data.addNews(session.attributes.Author, news, function(){});
 
                         // EASTER EGG - the six banana story gets a bad ass reaction.
                         if (story == "banana banana banana banana banana banana"){
                             alexaSpeak("YesIntentAllBananaStory", null, session, context, false);
                         }else{
+                            session.attributes.storyState = "AskedIfOpenForChaining";
                             alexaSpeak("YesIntent", null, session, context, false);
                         }
                     });
@@ -348,6 +362,15 @@ var sixWords = (function () {
                         session.attributes.storyState = undefined;
                         alexaSpeak("BadState", null, session, context, false);
                     }
+                });
+            }else if (storyState == "PromptedForChain"){
+                //Give the user the entire chain of stories.
+                data.assembleChain(session.attributes.recentStoryIndex, function(fullStoryChain){
+                    alexaSpeak("YesIntentGiveChain", fullStoryChain, session, context, false);
+                });
+            }else if (storyState == "AskedIfOpenForChaining") {
+                data.designateForChaining(session.attributes.recentTimeStamp, function (){
+                    alexaSpeak("YesIntentOpenForChaining", null, session, context, false);
                 });
             } else {
                 // Oops, not sure why they were saying Yes. Reset the state and give them some instructions.
@@ -425,6 +448,18 @@ var sixWords = (function () {
                 //If the user just entered the session, give them a generic help message
                 alexaSpeak("HelpIntent", null, session, context, false);
             }
+        },
+        BogusIntent: function(intent, session, context){
+            data.canChain(20158130746160212, function(canChain){
+               console.log(canChain) ;
+            });
+
+            data.isPartOfChain(20158150533110200, function(chain){
+                if (chain){
+                    data.assembleChain(20158150533110200, function(assembledChain){
+                    });
+                }
+            });
         },
         QuitIntent: function(intent, session, context) {
             // All done. Goodnight!
