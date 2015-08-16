@@ -14,9 +14,12 @@ nodeLambda.run = function (program, runWithTheseAttributes, callback) {
 
     // If there are some attributes passed in, they're from the previous test, so add them to the event.
     if (runWithTheseAttributes) {
-        console.log(event);
         event.session.attributes = runWithTheseAttributes;
-        console.log(event);
+    }
+
+    // Log what you said to Alexa.
+    if (event.userQuote) {
+        console.log("(-) You Said:\t"+event.userQuote);
     }
 
     this._runHandler(handler, event, callback);

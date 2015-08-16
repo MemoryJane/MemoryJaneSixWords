@@ -49,7 +49,6 @@ var sixWords = (function () {
                 intentName = event.request.intent.name,
                 intentHandler = intentHandlers[intentName];
             if (intentHandler) {
-                console.log('SixWords _onIntent dispatch intent = ' + intentName);
                 intentHandler(intent, event.session, context);
             } else {
                 throw 'SixWords ERROR Unsupported intent: ' + intentName;
@@ -453,7 +452,7 @@ var sixWords = (function () {
             }
 
             // Log the response.
-            console.log("(*) Alexa Says: "+fullScriptResponse);
+            console.log("(*) Alexa Says:\t"+fullScriptResponse);
 
             // Create a reprompt, which is just the message plus a short preamble.
             var repromptReaction = script.getScript("Reprompt", "Reaction", 0);
@@ -536,9 +535,6 @@ var sixWords = (function () {
  * @param context
  */
 exports.handler = function (event, context) {
-    console.log("SixWordsIndex _handler  START");
-
     // Create an instance of the SixWords skill and execute it.
     sixWords.execute(event, context);
-    console.log("SixWordsIndex _handler  DONE");
 };

@@ -1,7 +1,7 @@
 {
+  "userQuote": "Yes.",
   "version": "1.0",
   "session": {
-    "new": true,
     "sessionId": "SESSION_ID_LOCAL",
     "application": {
       "applicationId": "MemoryJaneSixWords"
@@ -12,10 +12,10 @@
   },
   "request": {
     "type": "IntentRequest",
-    "requestId": "ListenIntent",
+    "requestId": "YesIntent",
     "timestamp": "2015-05-13T12:34:56Z",
     "intent": {
-      "name": "ListenIntent"
+      "name": "YesIntent"
     }
   }
 }

@@ -20,11 +20,9 @@ var data = (function () {
         if (process.env.MEMJANE_USE_LOCAL_DB && process.env.MEMJANE_USE_LOCAL_DB == "true") {
             DB = new AWS.DynamoDB({endpoint: new AWS.Endpoint('http://localhost:8000')});
             DB.config.update({accessKeyId: "myKeyId", secretAccessKey: "secretKey", region: "us-east-1"});
-            console.log("Data_getDynamoDB_USING_LOCAL");
         } else {
             // Otherwise try to connect to the remote DB using the config file.
             DB = new AWS.DynamoDB();
-            console.log("Data_getDynamoDB_USING_AWS");
         }
         return DB;
     }
