@@ -604,12 +604,13 @@ var data = (function () {
                     concatChainArr[0] = 0;
                     for (i = 1; i < chainData.Count; i++){
                         for (k = 0; k < concatChainArr.length; k++){
-                            if (chainData.Items[i].TimeStamp.N < chainData.Items[k].TimeStamp.N){
+                            if (chainData.Items[i].TimeStamp.N < chainData.Items[concatChainArr[k]].TimeStamp.N){
                                 concatChainArr.splice(k, 0, i);
-                                k = concatChainArr.length + 1;
+                                k = concatChainArr.length;
                             }
                             if (k == concatChainArr.length-1){
                                 concatChainArr.splice(k+1, 0, i);
+                                k = concatChainArr.length;
                             }
                         }
                     }
