@@ -15,7 +15,7 @@
       "recentStoryIndex": "20158130746160212",
       "storyTime": "930348493049",
       "timeStamp": "2864420412082015",
-      "storyState": "JustHeardAStory",
+      "storyState": "JustCreatedAStory",
       "Author": "amzn1.account.AFM2SDUDN23KH6MJHROQVWCIW3IA",
       "userId": "amzn1.account.AFM2SDUDN23KH6MJHROQVWCIW3IA",
       "storyJustHeard": "banana banana test test test banana"
@@ -23,10 +23,13 @@
   },
   "request": {
     "type": "IntentRequest",
-    "requestId": "ListenIntent",
+    "requestId": "CreateIntent",
     "timestamp": "2015-05-13T12:34:56Z",
     "intent": {
-      "name": "ListenIntent"
+      "name": "CreateIntent",
+      "slots": {
+        "Story" : { "value": "banana banana ostrich test test banana" }
+      }
     }
   }
 }
