@@ -71,14 +71,13 @@ rl.question(useOursQuestion, function(useOursYOrN) {
     dynamodb.scan(tweetableStoriesParams, function (tweetableStoriesErr, tweetableStoriesData) {
         if (tweetableStoriesErr) throw ("Data_getRandomStories_ERROR " + tweetableStoriesErr);
         else {
-            console.log(tweetableStoriesData);
             var timeSortedStories = sortDescending(tweetableStoriesData.Items, "TimeStamp");
             var ratingSortedStories = sortDescending(tweetableStoriesData.Items, "Rating");
 
-            // Show the top 5 most recent and top 5 highest rated.
+            // Show at most the top 5 most recent and at most top 5 highest rated.
             var timeStoriesTable = "";
             var ratingStoriesTable = "";
-            for (i = 0; i < 5; i++) {
+            for (i = 0; i < 5 && i < tweetableStoriesData.Items.length; i++) {
                 timeStoriesTable += (i+1)+")  ";
                 var timePublished = timeSortedStories[i].TimeStamp.N.toString();
                 timeStoriesTable += " (Published: "+timePublished+") \t";
@@ -142,98 +141,54 @@ rl.question(useOursQuestion, function(useOursYOrN) {
                 dynamodb.updateItem(storyTwitterSelectedUpdateParams, function (updateError, updateData) {
                     if (updateError) throw ("Data_incrementStoryRating_ERROR " + updateError);
                     else {
-                        // Let's see if there are any reactions.
-                        var storyReactionParams = {
-                            TableName: 'MemoryJaneSixWordReactions',
-                            KeyConditionExpression: '#hashkey = :hk_val',
-                            ExpressionAttributeNames: {
-                                '#hashkey': "storyId"
-                            },
-                            ExpressionAttributeValues: {
-                                ':hk_val': {N: selectedStoryTimeStamp}
-                            },
-                            ScanIndexForward: true,
-                            Limit: 5
-                        };
 
-                        dynamodb.query(storyReactionParams, function (storyReactionErr, storyReactionData) {
-                            if (storyReactionErr) throw ("Data_getLatestStoryReactions_ERROR " + storyReactionErr);
-                            else {
-                                // Are there any reactions to add to the text?
-                                if (storyReactionData.Count > 0) {
-                                    // Yes! Add them to the tweet text.
-                                    tweetText += "\n\nReactions: ";
-                                    for (i = 0; i < storyReactionData.Count; i++) {
-                                        // Make sure adding the reaction won't put us over 140 characters.
-                                        var reactionToAdd = '#' + storyReactionData.Items[i].Reaction.S + ' ';
-                                        if (tweetText.length + reactionToAdd.length < 140) {
-                                            tweetText += reactionToAdd;
+                        // Ask if the tweet has a video, add it to the tweet if it does.
+                        q = "Enter the Vine URL: ?  ";
+                        rl.question(q, function(videoURL) {
+
+                            tweetText += "\n" + videoURL;
+
+                            // Let's see if there are any reactions.
+                            var storyReactionParams = {
+                                TableName: 'MemoryJaneSixWordReactions',
+                                KeyConditionExpression: '#hashkey = :hk_val',
+                                ExpressionAttributeNames: {
+                                    '#hashkey': "storyId"
+                                },
+                                ExpressionAttributeValues: {
+                                    ':hk_val': {N: selectedStoryTimeStamp}
+                                },
+                                ScanIndexForward: true,
+                                Limit: 5
+                            };
+
+                            dynamodb.query(storyReactionParams, function (storyReactionErr, storyReactionData) {
+                                if (storyReactionErr) throw ("Data_getLatestStoryReactions_ERROR " + storyReactionErr);
+                                else {
+                                    // Are there any reactions to add to the text?
+                                    if (storyReactionData.Count > 0) {
+                                        // Yes! Add them to the tweet text.
+                                        tweetText += "\n\nReactions: ";
+                                        for (i = 0; i < storyReactionData.Count; i++) {
+                                            // Make sure adding the reaction won't put us over 140 characters.
+                                            var reactionToAdd = '#' + storyReactionData.Items[i].Reaction.S + ' ';
+                                            if (tweetText.length + reactionToAdd.length < 140) {
+                                                tweetText += reactionToAdd;
+                                            }
                                         }
                                     }
-                                }
 
-                                // Ask if the tweet has a video, and upload it if it does.
-                                q = "Enter the Vine URL: ?  ";
-                                rl.question(q, function(videoURL) {
-
-                                    tweetText += "\n"+videoURL;
-
-                                    T.post('statuses/update', { status: tweetText }, function(err, data, response) {
+                                    T.post('statuses/update', {status: tweetText}, function (err, data, response) {
                                         console.log("\n\n" + tweetText + "\n\nCharacter Count: " + tweetText.length);
                                         process.exit(0);
                                     });
-
-
-                                    /*
-                                     twitterVideo.fromFile(videoFileName, twitterConfig, function (err, media_id) {
-                                     console.log(media_id);
-
-                                     var tweetParams= { status: tweetText, media_ids: [media_id] };
-
-                                     T.post('statuses/update', tweetParams, function (err, data, response) {
-                                     console.log(data);
-                                     console.log("\n\n" + tweetText + "\n\nCharacter Count: " + tweetText.length);
-                                     process.exit(0);
-                                     });
-                                     });
-
-
-
-
-                                     /*
-
-                                     var b64content = fs.readFileSync(videoFileName, { encoding: 'binary' });
-
-                                     // first we must post the media to Twitter
-                                     T.post('media/upload', { media: b64content }, function (err, data, response) {
-                                     if (err) console.log(err);
-
-                                     // now we can reference the media and post a tweet (media will attach to the tweet)
-                                     var mediaIdStr = data.media_id_string;
-                                     var tweetParams= { status: tweetText, media_ids: [mediaIdStr] };
-
-                                     T.post('statuses/update', tweetParams, function (err, data, response) {
-                                     console.log(data)
-                                     console.log("\n\n" + tweetText + "\n\nCharacter Count: " + tweetText.length);
-                                     process.exit(0);
-                                     });
-                                     });
-                                     */
-                                });
-                            }
-                        });
+                                }
+                            });
+                    });
                     }
                 });
 
             });
-
-
-            //T.post('statuses/update', params, function (err, data, response) {
-            //    console.log(data)
-            //})
-            //T.post('statuses/update', { status: "Hello World!" }, function(err, data, response) {
-            //    console.log(data)
-            //});
         }
     });
 });
