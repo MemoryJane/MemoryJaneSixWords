@@ -62,7 +62,7 @@ var data = (function () {
             ExpressionAttributeValues : { ":isTrue" : {"BOOL":true} }
         };
         dynamodb.scan(twitterStoriesParams, function (twitterStoriesError, twitterStoriesData) {
-            if (twitterStoriesError) throw ("Data_getRandomStories_ERROR " + twitterStoriesError);
+            if (twitterStoriesError) throw ("Data_areWeInTwitterMode_ERROR " + twitterStoriesError);
             else {
                 if (twitterStoriesData.Count > 0) {
                     // We only return the first one (but there should never be more than one ..).

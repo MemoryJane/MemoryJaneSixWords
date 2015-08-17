@@ -195,6 +195,21 @@ var script = (function () {
             "Alright, no theme stories."],
         NoIntentHearThemeStories_Instruction: "You can say tell me a story to hear a story or publish to write " +
         "your own. Which would you like to do?",
+        NoIntentPromptedForRemixes_Reaction: [
+            "No problem, no remixes.",
+            "Alright, no remixes."],
+        NoIntentPromptedForRemixes_Instruction: "You can say tell me a story to hear a story or publish to write " +
+        "your own. Which would you like to do?",
+        NoIntentPromptedForChain_Reaction: [
+            "No problem, I won't tell you the chain.",
+            "Alright, no chain of stories."],
+        NoIntentPromptedForChain_Instruction: "You can say tell me a story to hear a story or publish to write " +
+        "your own. Which would you like to do?",
+        NoIntentAskedIfOpenForChaining_Reaction: [
+            "Cool, I'll make sure that no one can chain that story.",
+            "Alright, I'll protect that story from being chained."],
+        NoIntentAskedIfOpenForChaining_Instruction: "You can say tell me a story to hear a story or publish to write " +
+        "your own. Which would you like to do?",
 
         MoreIntentHearStories_VerbosityKey: { "NOVICE": 5, "MEDIUM": 20 },
         MoreIntentHearStories_Reaction: "Awesome sauce, here's another story from that author. . %1",

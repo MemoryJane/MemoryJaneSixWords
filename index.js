@@ -25,14 +25,14 @@ var sixWords = (function () {
         LaunchRequest: function (event, context) {
             var userId = event.session.user.userId;
             // Let's see of the user has any news. If so, we want to give them a chance to hear it.
-            data.hasNews(userId, function(news) {
+            data.hasNews(userId, function (news) {
                 if (news) {
                     // Ask the user if they want to receive their news.
                     event.session.attributes.storyState = "GivenNewsPrompt";
                     alexaSpeak("GivenNews", null, event.session, context, false);
                 } else {
                     // No news. Let's see if it's a theme day.
-                    data.areThereThemeStoriesToHear(userId, function(areThereThemeStories, theTheme) {
+                    data.areThereThemeStoriesToHear(userId, function (areThereThemeStories, theTheme) {
                         if (!areThereThemeStories) {
                             // No news and no theme, so send a welcome message. No state here.
                             alexaSpeak("LaunchRequest", null, event.session, context, false);
@@ -109,13 +109,15 @@ var sixWords = (function () {
                     alexaSpeak(scriptKey, intent.slots.NumberStoriesRequested.value, session, context, false);
                 } else {
                     //Get a number of stories equal to the number that the user requested
-                    data.getRandomStories(storyCountRequested, function(stories, timeStamps, authors) {
+                    data.getRandomStories(storyCountRequested, function (stories, timeStamps, authors) {
                         var storiesConcat = "";
-                        for (i = 0; i < stories.length; i++) { storiesConcat += stories[i]+" . . "; }
+                        for (i = 0; i < stories.length; i++) {
+                            storiesConcat += stories[i] + " . . ";
+                        }
 
-                        session.attributes.recentStoryIndex = timeStamps[stories.length-1];
-                        session.attributes.Author = authors[stories.length-1];
-                        session.attributes.storyJustHeard = stories[stories.length-1];
+                        session.attributes.recentStoryIndex = timeStamps[stories.length - 1];
+                        session.attributes.Author = authors[stories.length - 1];
+                        session.attributes.storyJustHeard = stories[stories.length - 1];
                         session.attributes.storyState = "JustHeardAStory";
                         alexaSpeak("ListenIntentMultipleStoriesAndBlank", storiesConcat, session, context, false);
                     });
@@ -131,8 +133,8 @@ var sixWords = (function () {
                     data.putUserActivity(session.user.userId, timeStamp, "Listen");
 
                     // Let's see if the story we got has remixes, or is part of a chain.
-                    data.areThereRemixes(timeStamp, function(areThereRemixes){
-                        data.isPartOfChain(timeStamp, function(partOfChain) {
+                    data.areThereRemixes(timeStamp, function (areThereRemixes) {
+                        data.isPartOfChain(timeStamp, function (partOfChain) {
                             if (areThereRemixes) {
                                 // There is at least 1 remix, have Alexa read the story and ask if they want
                                 // to hear the remixes.
@@ -143,7 +145,7 @@ var sixWords = (function () {
                                 if (partOfChain) {
                                     session.attributes.storyState = "PromptedForChain";
                                     alexaSpeak("ListenIntentChainAndBlank", storyJustHeard, session, context, false);
-                                }else{
+                                } else {
                                     // If no remixes and no chain, have Alexa read the story and ask if they
                                     // want to up vote it.
                                     session.attributes.storyState = "JustHeardAStory";
@@ -171,7 +173,7 @@ var sixWords = (function () {
                     if (reaction.split(" ").length == 1) {
                         // We got a valid reaction, so create a short reaction response.
                         reactionResponse = script.getScript("UpVoteIntentWithReaction", "WithTheReaction", 0);
-                        reactionResponse += " "+reaction;
+                        reactionResponse += " " + reaction;
                     } else {
                         // Dang, we got a reaction, but it's too too long or empty.
                         // Don't add the up vote, just tell the user to try again.
@@ -191,20 +193,20 @@ var sixWords = (function () {
                     if (reactionResponse != "") {
                         var userId = session.user.userId;
                         var storyId = session.attributes.recentStoryIndex;
-                        data.addStoryReaction(reaction, storyId, userId, function() {
+                        data.addStoryReaction(reaction, storyId, userId, function () {
                             // And add it to the news of the author.
                             var news = script.getScript("NewsPreamble", "YouGotAComment", 0);
-                            news = news.replace("%1", reactionResponse)+" "+session.attributes.storyJustHeard;
+                            news = news.replace("%1", reactionResponse) + " " + session.attributes.storyJustHeard;
 
-                            data.addNews(session.attributes.Author, news, function(){
+                            data.addNews(session.attributes.Author, news, function () {
                                 alexaSpeak("UpVoteIntentAndBlank", reactionResponse, session, context, false);
                             });
                         });
                     } else {
                         // No reaction, so just add the news and send the response to Alexa.
                         var news = script.getScript("NewsPreamble", "YouGotAnUpVote", 0);
-                        news += " "+session.attributes.storyJustHeard;
-                        data.addNews(session.attributes.Author, news, function(){
+                        news += " " + session.attributes.storyJustHeard;
+                        data.addNews(session.attributes.Author, news, function () {
                             alexaSpeak("UpVoteIntentAndBlank", " ", session, context, false);
                         });
                     }
@@ -220,7 +222,7 @@ var sixWords = (function () {
                 alexaSpeak("BadState", null, session, context, false);
             } else {
                 // The user wants to hear the reactions for the most recent story.
-                data.getLatestStoryReactions(session.attributes.recentStoryIndex, function(reactions){
+                data.getLatestStoryReactions(session.attributes.recentStoryIndex, function (reactions) {
                     // Were there any reactions for this story?
                     if (!reactions) {
                         // Nope, let the user down easy, and tell them how to be the first to react.
@@ -229,7 +231,7 @@ var sixWords = (function () {
                         // Create a string of all the reactions, exclamation point separated.
                         var allReactions = "";
                         for (i = 0; i < reactions.length; i++) {
-                            allReactions += reactions[i]+"! ";
+                            allReactions += reactions[i] + "! ";
                         }
 
                         alexaSpeak("HearReactionsIntentAndBlank", allReactions, session, context, false);
@@ -283,38 +285,15 @@ var sixWords = (function () {
                     session.attributes.storyState = "JustCreatedAStory";
                     session.attributes.userStory = userStory;
 
-                    // Let's check to see if the story is a remix.
-                    var matches = true;
                     if (session.attributes.storyJustHeard){
                         var storyJustHeard = session.attributes.storyJustHeard.split(" ");
-
-                        // We just heard a story, let's see if 5 words are the same.
-                        var notMatching = 0;
-                        matches = true;
-                        for (i = 0; i < userStoryArrayWithoutPunctuation.length; i++){
-                            if (userStoryArrayWithoutPunctuation[i] != storyJustHeard[i]){
-                                if (++notMatching > 1) {
-                                    // Nope, more than 1 is not matching, so we don't have a remix.
-                                    matches = false;
-                                    i = userStoryArrayWithoutPunctuation.length;
-                                }
-                            }
-                        }
-
-                        // If the stories were exactly the same, then it's a rip off, not a remix.
-                        if (notMatching == 0) {
-                            matches = false;
-                        }
-                    } else {
-                        // Didn't just hear a story, can't be a remix
-                        matches = false;
+                        session.attributes.isRemix = isRemix(storyJustHeard, userStoryArrayWithoutPunctuation);
                     }
-                    session.attributes.isRemix = matches;
-                    
+
                     // Did the story match today's theme?
                     data.doesStoryMatchTheme(userStory, function (doesStoryMatchTheme, themeText) {
                         if (doesStoryMatchTheme) {
-                            if(matches) {
+                            if (session.attributes.isRemix) {
                                 // Is a remix and matches the theme.
                                 alexaSpeak("CreateIntentGoodStoryWithRemixPlusThemeAndBlank",
                                     userStory, session, context, false);
@@ -324,7 +303,7 @@ var sixWords = (function () {
                                     userStory, session, context, false);
                             }
                         } else {
-                            if(matches) {
+                            if (session.attributes.isRemix) {
                                 // Is a remix and does not match the theme.
                                 alexaSpeak("CreateIntentGoodStoryWithRemixAndBlank",
                                     userStory, session, context, false);
@@ -341,27 +320,27 @@ var sixWords = (function () {
         },
 
         // The user said Yes. This could be in response to many different questions, based on the state.
-        YesIntent: function(intent, session, context) {
+        YesIntent: function (intent, session, context) {
             var userId = session.user.userId;
             var storyState = session.attributes.storyState;
             var story = session.attributes.userStory;
 
-            if (storyState == "GivenNewsPrompt"){
+            if (storyState == "GivenNewsPrompt") {
                 // If the user was told that they have news and they said yes, give them the news.
                 session.attributes.storyState = null;
-                data.getNews(userId, function(news) {
+                data.getNews(userId, function (news) {
                     alexaSpeak("GivingNews", news, session, context, false);
                 });
             } else if (storyState == "JustCreatedAStory") {
                 // We just heard a story and we heard it right, so check to see if it's a theme
                 // and then store it in the DB
-                data.doesStoryMatchTheme(story, function(doesStoryMatchTheme, themeText) {
+                data.doesStoryMatchTheme(story, function (doesStoryMatchTheme, themeText) {
                     var remixAuthorId;
                     if (session.attributes.isRemix) {
                         remixAuthorId = session.attributes.recentStoryIndex;
                     }
 
-                    data.putNewStory(userId, story, themeText, remixAuthorId, null, function(timeStamp, putStoryError) {
+                    data.putNewStory(userId, story, themeText, remixAuthorId, null, function (timeStamp, putStoryError) {
                         // Remove the story from the session attributes, reset to thinking about creating.
                         session.attributes.recentTimeStamp = timeStamp;
                         session.attributes.storyState = "ThinkingAboutCreating";
@@ -376,8 +355,8 @@ var sixWords = (function () {
                         // If this was a remix, add news so the author knows they were remixed.
                         if (session.attributes.isRemix) {
                             var news = script.getScript("NewsPreamble", "YouGotRemixed", 0);
-                            news = news.replace("%1", session.attributes.storyJustHeard)+" "+session.attributes.userStory;
-                            data.addNews(session.attributes.Author, news, function() {
+                            news = news.replace("%1", session.attributes.storyJustHeard) + " " + session.attributes.userStory;
+                            data.addNews(session.attributes.Author, news, function () {
                                 alexaSpeak(yesIntentScript, null, session, context, false);
                             });
                         } else {
@@ -385,20 +364,24 @@ var sixWords = (function () {
                         }
                     });
                 });
-            } else if(storyState == "PromptedForRemixes") {
+            } else if (storyState == "PromptedForRemixes") {
                 // The user was just asked if they wanted to hear remixes and said yes. Give 'em the remixes.
-                data.getRemixes(session.attributes.recentStoryIndex, function(remixes){
+                data.getRemixes(session.attributes.recentStoryIndex, function (remixes) {
                     var remixesConcat = "";
-                    for (i = 0; i < remixes.length; i++) { remixesConcat += remixes[i]+" . "; }
+                    for (i = 0; i < remixes.length; i++) {
+                        remixesConcat += remixes[i] + " . ";
+                    }
                     alexaSpeak("YesIntentHearRemixes", remixesConcat, session, context, false);
                 });
             } else if (storyState == "JustAskedHearThemeStories") {
                 // They want to hear the theme stories of the day, so let's get them and recite them.
-                data.getThemeStories(function(themeStories, themeIds, themeAuthors) {
+                data.getThemeStories(function (themeStories, themeIds, themeAuthors) {
                     if (themeStories) {
                         // Create a single string of all of the stories.
                         var storiesConcat = "";
-                        for (i = 0; i < themeStories.length; i++) { storiesConcat += themeStories[i]+" . . "; }
+                        for (i = 0; i < themeStories.length; i++) {
+                            storiesConcat += themeStories[i] + " . . ";
+                        }
 
                         alexaSpeak("YesIntentHearThemeStories", storiesConcat, session, context, false);
                     } else {
@@ -407,13 +390,13 @@ var sixWords = (function () {
                         alexaSpeak("BadState", null, session, context, false);
                     }
                 });
-            } else if (storyState == "PromptedForChain"){
+            } else if (storyState == "PromptedForChain") {
                 // Give the user the entire chain of stories.
-                data.assembleChain(session.attributes.recentStoryIndex, function(fullStoryChain){
+                data.assembleChain(session.attributes.recentStoryIndex, function (fullStoryChain) {
                     alexaSpeak("YesIntentGiveChain", fullStoryChain, session, context, false);
                 });
             } else if (storyState == "AskedIfOpenForChaining") {
-                data.designateForChaining(session.attributes.recentTimeStamp, function (){
+                data.designateForChaining(session.attributes.recentTimeStamp, function () {
                     alexaSpeak("YesIntentOpenForChaining", null, session, context, false);
                 });
             } else {
@@ -424,8 +407,8 @@ var sixWords = (function () {
         },
 
         // The user said No. This could be in response to many different questions, based on the state.
-        NoIntent: function(intent, session, context) {
-            if (session.attributes.storyState == "GivenNewsPrompt"){
+        NoIntent: function (intent, session, context) {
+            if (session.attributes.storyState == "GivenNewsPrompt") {
                 // User was prompted for news and said no, so we give them some generic instructions.
                 session.attributes.storyState = null;
                 alexaSpeak("NoIntentNews", null, session, context, false);
@@ -437,6 +420,15 @@ var sixWords = (function () {
                 // User doesn't want to hear theme stories, so we give them some generic instructions.
                 session.attributes.storyState = null;
                 alexaSpeak("NoIntentHearThemeStories", null, session, context, false);
+            } else if (session.attributes.storyState == "PromptedForRemixes") {
+                session.attributes.storyState = "JustHeardAStory";
+                alexaSpeak("NoIntentPromptedForRemixes", null, session, context, false);
+            } else if (session.attributes.storyState == "PromptedForChain") {
+                session.attributes.storyState = "JustHeardAStory";
+                alexaSpeak("NoIntentPromptedForChain", null, session, context, false);
+            } else if (session.attributes.storyState == "AskedIfOpenForChaining") {
+                session.attributes.storyState = null;
+                alexaSpeak("NoIntentAskedIfOpenForChaining", null, session, context, false);
             } else {
                 // Not sure why they are saying no. Reset the state and give them some generic instructions.
                 session.attributes.storyState = null;
@@ -445,8 +437,8 @@ var sixWords = (function () {
         },
 
         // The user asked for more stories from the same author.
-        MoreIntent: function(intent, session, context) {
-            if (session.attributes.storyState != "JustHeardAStory"){
+        MoreIntent: function (intent, session, context) {
+            if (session.attributes.storyState != "JustHeardAStory") {
                 // If we didn't just hear a story, then this intent is not valid, give them some instructions.
                 session.attributes.storyState = undefined;
                 alexaSpeak("BadState", null, session, context, false);
@@ -454,7 +446,7 @@ var sixWords = (function () {
                 // Get the stories from this author.
                 var storiesToGet = 1;
                 var author = session.attributes.Author;
-                data.getStoriesByAuthor(storiesToGet, author, function(stories, timeStamps, authors) {
+                data.getStoriesByAuthor(storiesToGet, author, function (stories, timeStamps, authors) {
                     if (stories.length == 1) {
                         // If the author only has one story, no point in giving it again.
                         alexaSpeak("MoreIntentOneStory", null, session, context, false);
@@ -465,15 +457,17 @@ var sixWords = (function () {
                         // Have Alexa say the author's other stories and have the user say "more"
                         // if they want more.
                         // Save the story index to make sure we know which story was the last one read.
-                        session.attributes.recentStoryIndex = timeStamps[storiesToGet-1];
+                        session.attributes.recentStoryIndex = timeStamps[storiesToGet - 1];
                         session.attributes.storyState = "JustHeardAStory";
-                        session.attributes.Author = authors[storiesToGet-1];
-                        session.attributes.storyJustHeard = stories[storiesToGet-1];
+                        session.attributes.Author = authors[storiesToGet - 1];
+                        session.attributes.storyJustHeard = stories[storiesToGet - 1];
 
                         data.putUserActivity(session.user.userId, timeStamps[0], "More");
 
                         var storiesConcat = "";
-                        for (i = 0; i < storiesToGet; i++) { storiesConcat += stories[i]+" . . "; }
+                        for (i = 0; i < storiesToGet; i++) {
+                            storiesConcat += stories[i] + " . . ";
+                        }
 
                         alexaSpeak("MoreIntentHearStories", storiesConcat, session, context, false);
                     }
@@ -482,7 +476,7 @@ var sixWords = (function () {
         },
 
         // The user has asked for help.
-        HelpIntent: function(intent, session, context) {
+        HelpIntent: function (intent, session, context) {
             if (session.attributes.storyState == "ThinkingAboutCreating") {
                 //If the user is thinking about creating a story, tell them exactly how to
                 alexaSpeak("HelpIntentCreating", null, session, context, false);
@@ -493,23 +487,23 @@ var sixWords = (function () {
             } else if (session.attributes.storyState == "JustCreatedAStory") {
                 //If the user just created a story, give them a help message asking them to confirm their story
                 alexaSpeak("HelpIntentCreatedAndBlank", session.attributes.userStory, session, context, false);
-            }else if (session.attributes.storyState == "GivenNewsPrompt") {
+            } else if (session.attributes.storyState == "GivenNewsPrompt") {
                 //If the user was prompted that they had news, give them a help message asking for their response
                 alexaSpeak("HelpIntentNewsPrompt", null, session, context, false);
-            }else if (session.attributes.storyState == "JustAskedToHearThemeStories"){
+            } else if (session.attributes.storyState == "JustAskedToHearThemeStories") {
                 //If the user was prompted to hear theme stories, give them a help message asking for their response
                 alexaSpeak("HelpIntentThemeStories", null, session, context, false);
-            } else if (session.attributes.storyState == "PromptedForRemixes"){
+            } else if (session.attributes.storyState == "PromptedForRemixes") {
                 //If the user was prompted to hear remixes, give them a help message asking for their response
                 alexaSpeak("HelpIntentRemixPrompt", null, session, context, false);
-            }else {
+            } else {
                 //If the user just entered the session, give them a generic help message
                 alexaSpeak("HelpIntent", null, session, context, false);
             }
         },
 
         // User wants to quit. Let 'em.
-        QuitIntent: function(intent, session, context) {
+        QuitIntent: function (intent, session, context) {
             // All done. Goodnight!
             alexaSpeak("QuitIntent", null, session, context, true);
         }
@@ -523,11 +517,11 @@ var sixWords = (function () {
     function alexaSpeak(scriptKey, insertText, session, context, endSession) {
         // We measure how many times a user has heard each piece of the script, to decide how verbose to be with them.
         // Increment the user's verbosity level for this scriptKey, and get the count.
-        data.incrementScriptListenCount(session.user.userId, scriptKey, function(incrementError, verbosityCount) {
+        data.incrementScriptListenCount(session.user.userId, scriptKey, function (incrementError, verbosityCount) {
             // Use the script key to get the reaction and the message.
             var scriptReaction = script.getScript(scriptKey, "Reaction", verbosityCount);
             var scriptMessage = script.getScript(scriptKey, "Instruction", verbosityCount);
-            var fullScriptResponse = scriptReaction+" "+scriptMessage;
+            var fullScriptResponse = scriptReaction + " " + scriptMessage;
 
             // If there is some text to insert, do it.
             if (fullScriptResponse.search("%1") != -1 && insertText) {
@@ -536,16 +530,17 @@ var sixWords = (function () {
             }
 
             // Log the response.
-            console.log("(*) Alexa Says:\t"+fullScriptResponse);
+            console.log("(*) Alexa Says:\t" + fullScriptResponse);
 
             // Create a reprompt, which is just the message plus a short preamble.
             var repromptReaction = script.getScript("Reprompt", "Reaction", 0);
 
             // Create the response for Alexa.
-            var alexaResponse = { version: "1.0",
+            var alexaResponse = {
+                version: "1.0",
                 response: {
-                    outputSpeech: { type: 'PlainText', text: fullScriptResponse },
-                    reprompt: { outputSpeech: { type: 'PlainText', text: repromptReaction+" "+scriptMessage} },
+                    outputSpeech: {type: 'PlainText', text: fullScriptResponse},
+                    reprompt: {outputSpeech: {type: 'PlainText', text: repromptReaction + " " + scriptMessage}},
                     shouldEndSession: endSession
                 }
             };
@@ -565,7 +560,7 @@ var sixWords = (function () {
      * word. It discards any punctuation words at the beginning of the sentence. It returns a new
      * array with the updated words.
      */
-    function punctuationFixer (storyArray) {
+    function punctuationFixer(storyArray) {
         // Scan each of the words in the array.
         for (i = 0; i < storyArray.length; i++) {
             // If the word is period or comma.
@@ -574,7 +569,7 @@ var sixWords = (function () {
                     // This is not the first item, so append the punctuation to the previous word.
                     var punctuation = ".";
                     if (storyArray[i].toLowerCase() == "comma") punctuation = ",";
-                    storyArray[i-1] = storyArray[i-1].concat(punctuation);
+                    storyArray[i - 1] = storyArray[i - 1].concat(punctuation);
                 }
 
                 // Remove the punctuation from the array. and stay on the current word.
@@ -584,13 +579,13 @@ var sixWords = (function () {
 
             // If we're not at the end of the array and we have exclamation or question, check the next word.
             if (i < storyArray.length &&
-                (storyArray[i].toLowerCase() == "exclamation" && storyArray[i+1].toLowerCase() == "point") ||
-                (storyArray[i].toLowerCase() == "question" && storyArray[i+1].toLowerCase() == "mark")) {
+                (storyArray[i].toLowerCase() == "exclamation" && storyArray[i + 1].toLowerCase() == "point") ||
+                (storyArray[i].toLowerCase() == "question" && storyArray[i + 1].toLowerCase() == "mark")) {
                 if (i != 0) {
                     // This is not the first item, so append the punctuation to the previous word.
                     var exclamationPunctuation = "!";
                     if (storyArray[i].toLowerCase() == "question") exclamationPunctuation = "?";
-                    storyArray[i-1] = storyArray[i-1].concat(exclamationPunctuation);
+                    storyArray[i - 1] = storyArray[i - 1].concat(exclamationPunctuation);
                 }
 
                 // Remove the punctuation from the array. and stay on the current word.
@@ -600,6 +595,28 @@ var sixWords = (function () {
         }
 
         return storyArray;
+    }
+
+    /**
+     * This is a private helper function.
+     * Return if the userStoryArrayWithoutPunctuation is a remix of the storyJustHeard.
+     */
+    function isRemix(storyJustHeard, userStoryArrayWithoutPunctuation) {
+        // Let's check to see if the story is a remix.
+        // We just heard a story, let's see if 5 words are the same.
+        var matching = 0;
+        for (i = 0; i < userStoryArrayWithoutPunctuation.length; i++) {
+            for (j = 0; j < userStoryArrayWithoutPunctuation.length; j++) {
+                if (userStoryArrayWithoutPunctuation[i] == storyJustHeard[j]) {
+                    matching++;
+                    j = userStoryArrayWithoutPunctuation.length;
+                }
+            }
+        }
+
+        // If the stories have exactly 5 words matching, it is indeed a remix.
+        if (matching == 5) return (true);
+        else return (false);
     }
 
     return {
