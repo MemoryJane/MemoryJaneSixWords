@@ -287,13 +287,13 @@ var sixWords = (function () {
 
                     if (session.attributes.storyJustHeard){
                         var storyJustHeard = session.attributes.storyJustHeard.split(" ");
-                        session.attributes.isRemix = isRemix(storyJustHeard, userStoryArrayWithoutPunctuation);
+                        var matches = isRemix(storyJustHeard, userStory);
                     }
 
                     // Did the story match today's theme?
                     data.doesStoryMatchTheme(userStory, function (doesStoryMatchTheme, themeText) {
                         if (doesStoryMatchTheme) {
-                            if (session.attributes.isRemix) {
+                            if (matches) {
                                 // Is a remix and matches the theme.
                                 alexaSpeak("CreateIntentGoodStoryWithRemixPlusThemeAndBlank",
                                     userStory, session, context, false);
@@ -303,7 +303,7 @@ var sixWords = (function () {
                                     userStory, session, context, false);
                             }
                         } else {
-                            if (session.attributes.isRemix) {
+                            if (matches) {
                                 // Is a remix and does not match the theme.
                                 alexaSpeak("CreateIntentGoodStoryWithRemixAndBlank",
                                     userStory, session, context, false);
@@ -336,7 +336,8 @@ var sixWords = (function () {
                 // and then store it in the DB
                 data.doesStoryMatchTheme(story, function (doesStoryMatchTheme, themeText) {
                     var remixAuthorId;
-                    if (session.attributes.isRemix) {
+                    var matches = isRemix(session.attributes.storyJustHeard, session.attributes.userStory);
+                    if (matches) {
                         remixAuthorId = session.attributes.recentStoryIndex;
                     }
 
@@ -353,7 +354,7 @@ var sixWords = (function () {
                         }
 
                         // If this was a remix, add news so the author knows they were remixed.
-                        if (session.attributes.isRemix) {
+                        if (matches) {
                             var news = script.getScript("NewsPreamble", "YouGotRemixed", 0);
                             news = news.replace("%1", session.attributes.storyJustHeard) + " " + session.attributes.userStory;
                             data.addNews(session.attributes.Author, news, function () {
