@@ -182,7 +182,7 @@ var data = (function () {
                      dynamodb.updateItem(storyTwitterRemoveSelectedUpdateParams, function (updateError, updateData) {
                          if (updateError) throw ("Data_getRandomStory_ERROR " + updateError);
                          else {
-                             getRandomStoryCallback("Ready? . . . . . . . "+twitterModeStory.Story.S,
+                             getRandomStoryCallback(twitterModeStory.Story.S,
                                  twitterModeStory.TimeStamp.N.toString(),
                                  twitterModeStory.Author.S);
                          }
