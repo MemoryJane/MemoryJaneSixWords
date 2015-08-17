@@ -43,6 +43,34 @@ var data = (function () {
     }
 
     /**
+     * HACK: Enables us to record videos of specific stories that we're going to post to Twitter.
+     * If there is a story that is waiting to go to Twitter, then we return that story, otherwise
+     * we return null. Ideally this would also check to see if it was US who was asking, but since
+     * the get story functions don't give us any info about the user, it is possible that we won't
+     * be the next person into the call and therefore the story will go to someone else.
+     */
+    function areWeInTwitterMode(twitterModeCallback) {
+        var twitterStoriesParams = {
+            TableName: "MemoryJaneSixWordStories",
+            FilterExpression : "#approved = :isTrue AND #selectedForTwitter = :isTrue",
+            ExpressionAttributeNames : {
+                "#approved" : "Approved",
+                "#selectedForTwitter" : "SelectedForTwitter" },
+            ExpressionAttributeValues : { ":isTrue" : {"BOOL":true} }
+        };
+        dynamodb.scan(twitterStoriesParams, function (twitterStoriesError, twitterStoriesData) {
+            if (twitterStoriesError) throw ("Data_getRandomStories_ERROR " + twitterStoriesError);
+            else {
+                if (twitterStoriesData.Count > 0) {
+                    twitterModeCallback(twitterStoriesData.Items[0]);
+                } else {
+                    twitterModeCallback(null);
+                }
+            }
+        });
+    }
+
+    /**
      *
      */
     function getRandomStories(storyCountRequested, author, getRandomStoriesCallback) {
@@ -138,8 +166,33 @@ var data = (function () {
          * @param getRandomStoryCallback
          */
         getRandomStory: function (getRandomStoryCallback){
-             getRandomStories(1, null, function(stories, timeStamps, authors) {
-                 getRandomStoryCallback(stories[0], timeStamps[0], authors[0]);
+             // HACK: there is one time when we don't want to return a random story. If we just ran our
+             // Tweet script to create the text for a tweet, then we want to play back the specific tweet
+             // we picked in the Tweet script so we can record it.
+             areWeInTwitterMode(function(twitterModeStory) {
+                 if (twitterModeStory) {
+                     // Remove the twitter mode flag, so we only get that story once.
+                     var storyTwitterRemoveSelectedUpdateParams = {
+                         TableName: 'MemoryJaneSixWordStories',
+                         Key: {TimeStamp: {"N": twitterModeStory.TimeStamp.N.toString()}},
+                         UpdateExpression: "SET #selectedForTwitter = :false",
+                         ExpressionAttributeNames : { "#selectedForTwitter" : "SelectedForTwitter" },
+                         ExpressionAttributeValues : { ":false" : {"BOOL":false} }
+                     };
+                     dynamodb.updateItem(storyTwitterRemoveSelectedUpdateParams, function (updateError, updateData) {
+                         if (updateError) throw ("Data_getRandomStory_ERROR " + updateError);
+                         else {
+                             getRandomStoryCallback("Ready? . . . . . . . "+twitterModeStory.Story.S,
+                                 twitterModeStory.TimeStamp.N.toString(),
+                                 twitterModeStory.Author.S);
+                         }
+                     });
+                 } else {
+                     // Not in twitter mode, so let's get a ranodm story.
+                     getRandomStories(1, null, function(stories, timeStamps, authors) {
+                         getRandomStoryCallback(stories[0], timeStamps[0], authors[0]);
+                     });
+                 }
              });
         },
 

@@ -26,10 +26,7 @@
     "requestId": "ListenIntent",
     "timestamp": "2015-05-13T12:34:56Z",
     "intent": {
-      "name": "ListenIntent",
-      "slots": {
-        "Story" : { "value": "banana banana ostrich test test goat" }
-      }
+      "name": "ListenIntent"
     }
   }
 }

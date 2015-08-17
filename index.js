@@ -108,7 +108,7 @@ var sixWords = (function () {
                     });
                 }
             } else {
-                // Nope, didn't ask for a specific number of stories so, just get them a single story.
+                // Nope, didn't ask for a specific number of stories, so we're going to get one.
                 data.getRandomStory(function (storyJustHeard, timeStamp, author) {
                     // Save the story index to make sure we know which story was read.
                     session.attributes.recentStoryIndex = timeStamp;
