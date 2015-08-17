@@ -43,6 +43,7 @@ var dataTheme = ( function () {
      * array of the items from the DB, or null if there were none.
      */
     function getStoriesForTheme (dynamodb, themeText, getStoriesForThemeCallback) {
+        // Searching to find stories that have been labeled with the given theme.
         var themeStoriesParams = {
             TableName: "MemoryJaneSixWordStories",
             FilterExpression : "#approved = :isTrue AND #theme = :theme",
@@ -66,6 +67,10 @@ var dataTheme = ( function () {
         });
     }
 
+    /**
+     * This updates the DB to record that a user has heard the prompt for a particular theme. This prevents us from
+     * give them that prompt more than once.
+     */
     function updateThemeWithUserHeard(dynamodb, theme, heardIndex, userId, updateThemeWithUserHeardCallback) {
         // Prep the new user list.
         var userList = userId + " ";
@@ -73,6 +78,7 @@ var dataTheme = ( function () {
             userList = theme[heardIndex].S + userList;
         }
 
+        // This is the updated theme with the updated user list.
         var updateToHeardParams = {
             TableName: "MemoryJaneSixWordThemes",
             Key: {
@@ -92,6 +98,7 @@ var dataTheme = ( function () {
         });
     }
 
+    // These are the module's public functions ..
     return {
         /**
          * Checks to see if a story matches the current theme. Returns a boolean and the theme, if it matched.
@@ -155,6 +162,7 @@ var dataTheme = ( function () {
          * Returns at most 5 stories.
          */
         getThemeStories: function(data, dynamodb, getThemeStoriesCallback) {
+            // First see if there's a theme.
             getThemeForTime(dynamodb, data.getTimeStamp().toString(), function(todaysTheme) {
                 // Did we get a theme?
                 if (!todaysTheme) {
@@ -192,6 +200,7 @@ var dataTheme = ( function () {
          * requests to create a theme story.
          */
         isThereAThemeToPromptFor: function(data, dynamodb, userId, isThereAThemeCallback) {
+            // Is there a theme for right now?
             getThemeForTime(dynamodb, data.getTimeStamp().toString(), function(todaysTheme) {
                 // Did we get a theme?
                 if (!todaysTheme) {

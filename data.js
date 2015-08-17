@@ -3,25 +3,27 @@
  * It follows the Module pattern.
  */
 var data = (function () {
+    // Setup our DB connection.
     var AWS = require("aws-sdk");
-    var dataTheme = require("./datatheme.js");
     var dynamodb = getDynamoDB();
 
+    // This is the module that contains all of the theme code.
+    var dataTheme = require("./datatheme.js");
+
     /**
-     * Get the database object, either from AWS if it is there, or locally if it is not.
+     * Get the database object, we can switch between AWS and local using environment variables.
      * This is a private function.
-     * @returns {AWS.DynamoDB}
      */
     function getDynamoDB () {
         var DB;
 
-        // We're checking the process variables to see if should go local. If the envirnment variables
-        // are not set, we use AWS.
+        // We're checking the process variables to see if should go local. If the environment variables
+        // are not set, we use AWS. These are typically set in the .env file.
         if (process.env.MEMJANE_USE_LOCAL_DB && process.env.MEMJANE_USE_LOCAL_DB == "true") {
             DB = new AWS.DynamoDB({endpoint: new AWS.Endpoint('http://localhost:8000')});
             DB.config.update({accessKeyId: "myKeyId", secretAccessKey: "secretKey", region: "us-east-1"});
         } else {
-            // Otherwise try to connect to the remote DB using the config file.
+            // Otherwise try to connect to the remote DB using the .env config file.
             DB = new AWS.DynamoDB();
         }
         return DB;
@@ -45,13 +47,14 @@ var data = (function () {
     /**
      * HACK: Enables us to record videos of specific stories that we're going to post to Twitter.
      * If there is a story that is waiting to go to Twitter, then we return that story, otherwise
-     * we return null. Ideally this would also check to see if it was US who was asking, but since
-     * the get story functions don't give us any info about the user, it is possible that we won't
-     * be the next person into the call and therefore the story will go to someone else.
+     * we return null. Ideally this would also check to see if it was a specific person who was asking,
+     * but since the get story functions don't give us any info about the user, it is possible that
+     * we won't be the next person into the call and therefore the story will go to someone else.
      */
     function areWeInTwitterMode(twitterModeCallback) {
+        // This is looking for any story that was tagged as being selected for Twitter.
         var twitterStoriesParams = {
-            TableName: "MemoryJaneSixWordStories",
+            TableName : "MemoryJaneSixWordStories",
             FilterExpression : "#approved = :isTrue AND #selectedForTwitter = :isTrue",
             ExpressionAttributeNames : {
                 "#approved" : "Approved",
@@ -62,6 +65,7 @@ var data = (function () {
             if (twitterStoriesError) throw ("Data_getRandomStories_ERROR " + twitterStoriesError);
             else {
                 if (twitterStoriesData.Count > 0) {
+                    // We only return the first one (but there should never be more than one ..).
                     twitterModeCallback(twitterStoriesData.Items[0]);
                 } else {
                     twitterModeCallback(null);
@@ -71,7 +75,8 @@ var data = (function () {
     }
 
     /**
-     *
+     * Private helper function that is used by all the public functions to get stories with more
+     * specific purposes. Returns arrays of story texts, time stamps, and authors.
      */
     function getRandomStories(storyCountRequested, author, getRandomStoriesCallback) {
         // We're looking for any stories that are approved..
@@ -126,13 +131,11 @@ var data = (function () {
         });
     }
 
+    // These are the public functions of the module.
     return {
         /**
          * This takes a userId and a scriptKey and increases by one the number of times the user has heard the
          * scriptKey. It then returns the number of times it's been heard in the callback.
-         * @param userId
-         * @param scriptKey
-         * @param scriptListenCallback
          */
         incrementScriptListenCount: function(userId, scriptKey, scriptListenCallback) {
             //Declare parameters for use in updateItem. These increment the listen count by one.
@@ -151,6 +154,7 @@ var data = (function () {
                     var getListenCountParams = { TableName: 'MemoryJaneSixWordScriptListens',
                         Key : { UserID : { "S" : userId }, ScriptKey : { "S" : scriptKey } }
                     };
+
                     dynamodb.getItem(getListenCountParams, function(listenError, listenData) {
                         if (listenError) throw("Data_incrementScriptListenCount_ERROR_ " + listenError);
                         else{
@@ -162,10 +166,10 @@ var data = (function () {
         },
 
          /**
-         * Gets a random story from the database and returns it
-         * @param getRandomStoryCallback
+         * Gets a random story from the database and returns it. This returns single string items for the
+          * story text, time stamp and author, not arrays.
          */
-        getRandomStory: function (getRandomStoryCallback){
+        getRandomStory: function (getRandomStoryCallback) {
              // HACK: there is one time when we don't want to return a random story. If we just ran our
              // Tweet script to create the text for a tweet, then we want to play back the specific tweet
              // we picked in the Tweet script so we can record it.
@@ -188,7 +192,7 @@ var data = (function () {
                          }
                      });
                  } else {
-                     // Not in twitter mode, so let's get a ranodm story.
+                     // Not in twitter mode, so let's get a random story.
                      getRandomStories(1, null, function(stories, timeStamps, authors) {
                          getRandomStoryCallback(stories[0], timeStamps[0], authors[0]);
                      });
@@ -198,9 +202,6 @@ var data = (function () {
 
         /**
          * Gets "n" stories from a particular author
-         * @param storyCountRequested
-         * @param author
-         * @param authorStoriesCallback
          */
         getStoriesByAuthor: function (storyCountRequested, author, authorStoriesCallback){
             getRandomStories(storyCountRequested, author, function(stories, timeStamps, authors) {
@@ -210,8 +211,6 @@ var data = (function () {
 
         /**
          * Gets a specific number of random stories and returns them.
-         * @param storyCountRequested
-         * @param getRandomStoriesCallback
          */
         getRandomStories: function (storyCountRequested, getRandomStoriesCallback){
             getRandomStories(storyCountRequested, null, function(stories, timeStamps, authors) {
@@ -220,18 +219,12 @@ var data = (function () {
         },
 
         /**
-         * Puts a user created story into the database
-         * @param author
-         * @param story
-         * @param themeText
-         * @param remixId
-         * @param chainId
-         * @param putStoryCallback
+         * Puts a user created story into the database. Returns the time stamp (index) of the story.
          */
         putNewStory: function (author, story, themeText, remixId, chainId, putStoryCallback){
-            //Declare parameters for use in putItem. These put a new story into the database at an initial rating of
-            //zero, a TimeStamp equal to the current time, Author as the user's userId and Story as the story that
-            //they said to publish.
+            // Declare parameters for use in putItem. These put a new story into the database at an initial rating of
+            // zero, a TimeStamp equal to the current time, Author as the user's userId and Story as the story that
+            // they said to publish.
             var timeStamp = getTimeStamp().toString();
             var newStoryParams = {
                 TableName: 'MemoryJaneSixWordStories',
@@ -260,9 +253,6 @@ var data = (function () {
 
         /*
          * Increment the story rating for a specific story.
-         * @param date
-         * @param time
-         * @param incrementStoryCallback
          */
         incrementStoryRating: function (time, incrementStoryCallback) {
             //Declare parameters for use in updateItem. These increment the rating count by one.
@@ -282,14 +272,10 @@ var data = (function () {
 
         /**
          * Adds a reaction to a current story
-         * @param reaction
-         * @param storyId
-         * @param userId
-         * @param addStoryCallback
          */
         addStoryReaction: function (reaction, storyId, userId, addStoryCallback) {
-            //Declare parameters for use in putItem. These add a new reaction to the reactions table, based on the
-            //story that is being reacted to, the current time, the reactor's userId, and the reaction.
+            // Declare parameters for use in putItem. These add a new reaction to the reactions table, based on the
+            // story that is being reacted to, the current time, the reactor's userId, and the reaction.
             var newReactionParams = {
                 TableName: 'MemoryJaneSixWordReactions',
                 Item: {
@@ -307,12 +293,10 @@ var data = (function () {
         },
 
         /**
-         * Gets a specific story's rating from the database and returns it
-         * @param storyId
-         * @param getStoryRatingCallback
+         * Gets a specific story's rating from the database and returns it.
          */
         getStoryRating: function (storyId, getStoryRatingCallback){
-            //Declare parameters for use in getItem. These retrieve the item with the specified TimeStamp.
+            // Declare parameters for use in getItem. These retrieve the item with the specified TimeStamp.
             var storyRatingParams = {
                 TableName: 'MemoryJaneSixWordStories',
                 Item: {
@@ -330,22 +314,16 @@ var data = (function () {
         },
 
         /**
-         * Get reactions for the story that the user just listened to
-         * @param storyId
-         * @param storyReactionCallback
+         * Get reactions for the story that the user just listened to.
          */
         getLatestStoryReactions: function (storyId, storyReactionCallback){
-            //Declare parameters for use in query. These find all reactions in the table associated with the specific
-            //storyId.
+            // Declare parameters for use in query. These find all reactions in the table associated with the specific
+            // storyId.
             var storyReactionParams = {
                 TableName: 'MemoryJaneSixWordReactions',
                 KeyConditionExpression: '#hashkey = :hk_val',
-                ExpressionAttributeNames: {
-                    '#hashkey': "storyId"
-                },
-                ExpressionAttributeValues: {
-                    ':hk_val': {N: storyId}
-                },
+                ExpressionAttributeNames: { '#hashkey': "storyId" },
+                ExpressionAttributeValues: { ':hk_val': {N: storyId} },
                 ScanIndexForward: true,
                 Limit: 5
             };
@@ -353,17 +331,13 @@ var data = (function () {
             dynamodb.query(storyReactionParams, function (storyReactionErr, storyReactionData) {
                 if (storyReactionErr) throw ("Data_getLatestStoryReactions_ERROR " + storyReactionErr);
                 else {
-                    //Declare count as the number of items returned by the query
-                    var count = storyReactionData.Count;
-
-                    //If no items were returned, the story had no reactions so return undefined. Otherwise, callback
-                    //all of the reactions to the story in array format.
-                    if (count == 0) {
-                        storyReactionCallback(undefined);
-                    }
-                    else{
+                    // If no items were returned, the story had no reactions so return null. Otherwise, callback
+                    // all of the reactions to the story in array format.
+                    if (storyReactionData.Count == 0) {
+                        storyReactionCallback(null);
+                    } else{
                         var reactions = [];
-                        for (i = 0; i < count; i++) {
+                        for (i = 0; i < storyReactionData.Count; i++) {
                             reactions[i] = storyReactionData.Items[i].Reaction.S;
                         }
                         storyReactionCallback(reactions);
@@ -374,14 +348,14 @@ var data = (function () {
 
         /**
          * Puts logs of what users do into the database
-         * @param user
-         * @param story
-         * @param userAction
-         * @param putUserActivityCallback
+         * WARNING: This function is technically asynchronous because it calls the DB. Which means
+         * it may not finish before the script does if the DB takes a long time. So, it's not 100%
+         * certain that your activity will get recorded. I did this for simplicity sake, and because the
+         * activity data is not app-critical.
          */
-        putUserActivity: function (user, story, userAction, putUserActivityCallback){
-            //Declare parameters for use in putItem. These enter information into the table when users take certain
-            //actions.
+        putUserActivity: function (user, story, userAction){
+            // Declare parameters for use in putItem. These enter information into the table when users take certain
+            // actions.
             var activityParams = {
                 TableName: 'MemoryJaneSixWordStoriesActivity',
                 Item: {
@@ -394,14 +368,11 @@ var data = (function () {
 
             dynamodb.putItem(activityParams, function (putUserActivityErr, putUserActivityData) {
                 if (putUserActivityErr) throw ("Data_putUserActivity_ERROR " + putUserActivityErr);
-                else putUserActivityCallback();
             });
         },
 
         /**
          * Gets the latest news update based on the specific user
-         * @param user
-         * @param getNewsCallback
          */
         getNews: function(user, getNewsCallback){
             //Declare parameters for use in query. These retrieve all pieces of news associated with a userId.
@@ -422,38 +393,42 @@ var data = (function () {
 
             dynamodb.query(getNewsParams, function (newsQueryErr, newsQueryData) {
                 if (newsQueryErr) throw ("Data_getNews_ERROR " + newsQueryErr);
+                else {
+                    // Did we get any news items?
+                    if (!newsQueryData.Items[0]){
+                        // No, no news, return null.
+                        getNewsCallback(null);
+                    } else {
+                        // Got news, is it read already?
+                        if (newsQueryData.Items[0].Read.S == "true"){
+                            // Yep, so return null, we're only looking for new news.
+                            getNewsCallback(null);
+                        }else {
+                            // Alright, there is new news. Let's mark it read and return it.
+                            var updateItemParams = {
+                                TableName : "MemoryJaneSixWordNews",
+                                Key : { userId : { "S" : user },
+                                    TimeStamp : { "N": newsQueryData.Items[0].TimeStamp.N } },
+                                UpdateExpression : "SET #approved = :isTrue",
+                                ExpressionAttributeNames : { "#approved" : "Read" },
+                                ExpressionAttributeValues : { ":isTrue" : {"S":"true"} }
+                            };
 
-                //If the query returned no news items, return undefined. Otherwise, if the first item returned has
-                //already been read, return undefined. Otherwise, return the most recent piece of news and mark it
-                //as read.
-                if (!newsQueryData.Items[0]){
-                    getNewsCallback(undefined);
-                } else {
-                    if (newsQueryData.Items[0].Read.S == "true"){
-                        getNewsCallback(undefined);
-                    }else {
-                        var updateItemParams = {
-                            TableName : "MemoryJaneSixWordNews",
-                            Key : { userId : { "S" : user }, TimeStamp : { "N": newsQueryData.Items[0].TimeStamp.N } },
-                            UpdateExpression : "SET #approved = :isTrue",
-                            ExpressionAttributeNames : { "#approved" : "Read" },
-                            ExpressionAttributeValues : { ":isTrue" : {"S":"true"} }
-                        };
-                        dynamodb.updateItem(updateItemParams, function(newsQueryErr, newsData){
-                            getNewsCallback(newsQueryData.Items[0].News.S);
-                        });
+                            dynamodb.updateItem(updateItemParams, function(newsUpdateErr, newsUpdateData) {
+                                if (newsUpdateErr) throw ("Data_getNews_ERROR " + newsUpdateErr);
+                                else getNewsCallback(newsQueryData.Items[0].News.S);
+                            });
+                        }
                     }
                 }
             });
         },
 
         /**
-         * Checks if a specific user has news
-         * @param user
-         * @param hasNewsCallback
+         * Checks if a specific user has news.
          */
         hasNews: function(user, hasNewsCallback){
-            //Declare parameters for use in query. These check if there is news associated with the userId.
+            // Declare parameters for use in query. These check if there is news associated with the userId.
             var getNewsParams = {
                 TableName: 'MemoryJaneSixWordNews',
                 KeyConditionExpression: '#hashkey = :hk_val AND #rangekey >= :rk_val',
@@ -471,16 +446,17 @@ var data = (function () {
 
             dynamodb.query(getNewsParams, function (newsQueryErr, newsQueryData) {
                 if (newsQueryErr) throw ("Data_hasNews_ERROR " + newsQueryErr);
-
-                //If the query returned no news items, return false. Otherwise, if the first item returned has
-                //already been read, return false. Otherwise, return true.
-                if (!newsQueryData.Items[0]){
-                    hasNewsCallback(false);
-                } else {
-                    if (newsQueryData.Items[0].Read.S == "true"){
+                else {
+                    // If the query returned no news items, return false. Otherwise, if the first item returned has
+                    // already been read, return false. Otherwise, return true.
+                    if (!newsQueryData.Items[0]){
                         hasNewsCallback(false);
-                    }else {
-                        hasNewsCallback(true);
+                    } else {
+                        if (newsQueryData.Items[0].Read.S == "true"){
+                            hasNewsCallback(false);
+                        } else {
+                            hasNewsCallback(true);
+                        }
                     }
                 }
             });
@@ -488,13 +464,10 @@ var data = (function () {
 
         /**
          * Adds a news item when a user's stories are reacted to
-         * @param userId
-         * @param news
-         * @param addNewsCallback
          */
         addNews: function (userId, news, addNewsCallback) {
-            //Declare parameters for use in putItem. These put a new news item into the news database under the userId
-            //of the user that the news is for and containing the piece of news for them to read.
+            // Declare parameters for use in putItem. These put a new news item into the news database under the userId
+            // of the user that the news is for and containing the piece of news for them to read.
             var newNewsParams = {
                 TableName: 'MemoryJaneSixWordNews',
                 Item: {
@@ -507,116 +480,123 @@ var data = (function () {
 
             dynamodb.putItem(newNewsParams, function (addNewsErr, addNewsData) {
                 if (addNewsErr) throw ("Data_addNews_ERROR " + addNewsErr);
-                addNewsCallback();
+                else addNewsCallback();
             });
         },
 
         /**
          * Determine if there is at least 1 remix associated with the given story.
-         * @param storyId
-         * @param areThereRemixesCallback
          */
         areThereRemixes: function (storyId, areThereRemixesCallback){
+            // We're looking for stories where the remix ID is the story ID passed in.
             var areThereRemixesParams = {
                 TableName: "MemoryJaneSixWordStories",
                 FilterExpression : "#remixId = :storyId",
                 ExpressionAttributeNames : { "#remixId" : "RemixId" },
                 ExpressionAttributeValues : { ":storyId" : {"N":storyId} }
             };
+
             dynamodb.scan(areThereRemixesParams, function (remixesErr, remixesData) {
                 if (remixesErr) throw ("Data_areThereRemixes_ERROR " + remixesErr);
-                else {
-                    var remix = false;
-                    if (remixesData.Count > 0){
-                        remix = true;
-                    }
-                    areThereRemixesCallback(remix);
-                }
+                else areThereRemixesCallback(remixesData.Count > 0);
             });
         },
 
         /**
-         * Get all remixes associated with the given story.
-         * @param storyId
-         * @param getRemixesCallback
+         * Get all remixes associated with the given story. Returns an array of strings, any and all
+         * remixes.
          */
         getRemixes: function (storyId, getRemixesCallback){
+            // We're looking for stories that have a remix ID of the story ID passed in.
             var areThereRemixesParams = {
                 TableName: "MemoryJaneSixWordStories",
                 FilterExpression : "#remixId = :storyId",
                 ExpressionAttributeNames : { "#remixId" : "RemixId" },
                 ExpressionAttributeValues : { ":storyId" : {"N":storyId} }
             };
+
             dynamodb.scan(areThereRemixesParams, function (remixesErr, remixesData) {
                 if (remixesErr) throw ("Data_getRemixes_ERROR " + remixesErr);
                 else {
                     var remixCount = remixesData.Count;
                     var remixes = [];
+
+                    // Turn the array of DB items into an array of story strings.
                     for(i = 0; i < remixCount; i ++){
                         remixes[i] = remixesData.Items[i].Story.S;
                     }
+
                     getRemixesCallback(remixes);
                 }
             });
         },
 
         /**
-         * Checks if the story is part of a chain of stories
-         * @param chainId
-         * @param partOfChainCallback
+         * Checks if the story is part of a chain of stories.
          */
         isPartOfChain: function (chainId, partOfChainCallback){
+            // We're looking for stories where the chain ID is the story ID passed in.
             var isPartOfChainParams = {
                 TableName: "MemoryJaneSixWordStories",
                 FilterExpression : "#chainId = :storyId",
                 ExpressionAttributeNames : { "#chainId" : "ChainId" },
                 ExpressionAttributeValues : { ":storyId" : {"N":chainId.toString()} }
             };
+
             dynamodb.scan(isPartOfChainParams, function (chainErr, chainData) {
                 if (chainErr) throw ("Data_isPartOfChain_ERROR " + chainErr);
-                else {
-                    var chain = false;
-                    if (chainData.Count > 1){
-                        chain = true;
-                    }
-                    partOfChainCallback(chain);
-                }
+                else partOfChainCallback(chainData.Count > 1);
             });
         },
 
         /**
-         * Assembles the chain of words given the chainId
-         * @param chainId
-         * @param partOfChainCallback
+         * Assembles the chain of stories given the chainId. Returns a string that is all of the stories, in
+         * order, separated by periods and spaces.
          */
         assembleChain: function (chainId, partOfChainCallback){
+            // We're looking for all of the stories that are in a chain, by pulling all stories where the
+            // chain ID is the chain ID passed in.
             var assembleChainParams = {
                 TableName: "MemoryJaneSixWordStories",
                 FilterExpression : "#chainId = :storyId",
                 ExpressionAttributeNames : { "#chainId" : "ChainId" },
                 ExpressionAttributeValues : { ":storyId" : {"N":chainId.toString()} }
             };
+
             dynamodb.scan(assembleChainParams, function (chainErr, chainData) {
                 if (chainErr) throw ("Data_assembleChain_ERROR " + chainErr);
                 else {
+                    // concatChain is the final string to return. concatChainArr is the array of indexes
+                    // of the stories in the chain.
                     var concatChain = "";
                     var concatChainArr = [];
+
+                    // Set the first item to the index 0, and then sort from there.
                     concatChainArr[0] = 0;
-                    for (i = 1; i < chainData.Count; i++){
-                        for (k = 0; k < concatChainArr.length; k++){
+
+                    // Simple sort. Go down the list in the concatChainArr and find the position of the next
+                    // item from the chainData array.
+                    for (i = 1; i < chainData.Count; i++) {
+                        for (k = 0; k < concatChainArr.length; k++) {
                             if (chainData.Items[i].TimeStamp.N < chainData.Items[concatChainArr[k]].TimeStamp.N){
+                                // Found the position. Insert it, and go on to the next item in chainData.
                                 concatChainArr.splice(k, 0, i);
                                 k = concatChainArr.length;
                             }
-                            if (k == concatChainArr.length-1){
+
+                            if (k == concatChainArr.length-1) {
+                                // We made it to the end of the list, this item is the last item.
                                 concatChainArr.splice(k+1, 0, i);
                                 k = concatChainArr.length;
                             }
                         }
                     }
+
+                    // Sort complete, now create the string with the stories in the right order.
                     for (j = 0; j < chainData.Count; j++){
                         concatChain += chainData.Items[concatChainArr[j]].Story.S + ". ";
                     }
+
                     partOfChainCallback(concatChain);
                 }
             });
@@ -624,20 +604,22 @@ var data = (function () {
 
         /**
          * Checks if the story has been designated for chaining
-         * @param storyId
-         * @param canChainCallback
          */
         canChain: function (storyId, canChainCallback){
+            // We're looking for the story with the story ID passed in.
             var canChainParams = {
                 TableName: "MemoryJaneSixWordStories",
                 FilterExpression : "#chainId = :storyId",
                 ExpressionAttributeNames : { "#chainId" : "TimeStamp" },
                 ExpressionAttributeValues : { ":storyId" : {"N":storyId.toString()} }
             };
+
             dynamodb.scan(canChainParams, function (chainErr, chainData) {
                 if (chainErr) throw ("Data_canChain_ERROR " + chainErr);
                 else {
                     var canChain = false;
+
+                    // A story is chainable if it's ChainID is the same as its TimeStamp.
                     if (chainData.Items[0].ChainId &&
                         (chainData.Items[0].TimeStamp.N == chainData.Items[0].ChainId.N)){
                         canChain = true;
@@ -647,7 +629,12 @@ var data = (function () {
             });
         },
 
+        /**
+         * Sets a story up as the root of a chain of stories.
+         */
         designateForChaining: function(storyId, designateForChainingCallback){
+            // We're updating just the chain ID of the story to be chainable by setting it to
+            // the story's story ID.
             var chainingParams = {
                 TableName : "MemoryJaneSixWordStories",
                 Key : { TimeStamp : { "N": storyId } },

@@ -138,7 +138,10 @@ var script = (function () {
         "or say tell me a story to hear a story.",
         YesIntent_MEDIUM_Instruction: "You can publish another story or say tell me a story. Additionally, you can " +
         "say yes to make your story open to chaining by other users. What would you like to do next? ",
-        YesIntent_EXPERT_Instruction: "What would you like to do next?",
+        YesIntent_EXPERT_Instruction: [
+            "Would you like me to make it chainable?",
+            "Can other people chain off this story?",
+            "Want to make it a chain?"],
 
         YesIntentHearThemeStories_VerbosityKey: { "NOVICE": 5, "MEDIUM": 20 },
         YesIntentHearThemeStories_Reaction: "Excellent, here's some theme stories for you. . %1",
@@ -242,7 +245,8 @@ var script = (function () {
 
 
     return {
-        /*
+        /**
+         * Only public method of the module.
          * Gets a piece of script. Returns the script if it is there, or "" if it is not.
          * The verbosityLevel is a number, representing the number of times a user has heard the specific scriptKey,
          * which is used to reduce the verbosity of a key as the user hears it more. This way, the  script controls
@@ -269,7 +273,7 @@ var script = (function () {
 
             var scriptToReturn = script[scriptKey+"_"+scriptPiece];
             // If the script they're looking for is an array, then it has variation and we need to get a random
-            // version of the script.
+            // version of that script.
             if (Array.isArray(script[scriptKey+"_"+scriptPiece])) {
                 var scriptArrayCount = script[scriptKey+"_"+scriptPiece].length;
                 var randomIndex = (Math.floor(Math.random() * scriptArrayCount));
