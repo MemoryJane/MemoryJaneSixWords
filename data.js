@@ -561,7 +561,7 @@ var data = (function () {
         },
 
         /**
-         * Checks if the story is part of a chain
+         * Checks if the story is part of a chain of stories
          * @param chainId
          * @param partOfChainCallback
          */
